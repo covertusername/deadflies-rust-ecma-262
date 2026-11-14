@@ -4,7 +4,7 @@ mod util;
 mod abstract_ops;
 
 pub mod types {
-    use infra::{primitives::IString, structs::{ArcRw, List, Map}};
+    use deadflies_rust_infra::{primitives::IString, structs::{ArcRw, List, Map}};
     use std::{error::Error, ops::{Add, Div, Mul, Neg, Not, Rem, Shl, Sub}, sync::{Arc, Weak, atomic::{AtomicBool, AtomicU64, Ordering}}};
     use parking_lot::{Mutex, RwLock};
     use num_bigint::BigInt;
@@ -1705,7 +1705,7 @@ pub mod types {
     #[allow(unused_variables)] // TODO: unfinished
     pub mod data_block {
         use std::{error::Error, sync::Arc};
-        use infra::structs::ArcRw;
+        use deadflies_rust_infra::structs::ArcRw;
 
         #[allow(dead_code)] // TODO: unfinished
         pub struct DataBlock {

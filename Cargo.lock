@@ -59,9 +59,18 @@ name = "deadflies-rust-ecma-262"
 version = "0.1.0"
 dependencies = [
  "astro-float",
- "infra",
+ "deadflies-rust-infra",
  "num-bigint",
  "parking_lot",
+]
+
+[[package]]
+name = "deadflies-rust-infra"
+version = "0.1.0"
+dependencies = [
+ "num-bigint",
+ "parking_lot",
+ "widestring",
 ]
 
 [[package]]
@@ -79,15 +88,6 @@ dependencies = [
  "cfg-if",
  "libc",
  "wasi",
-]
-
-[[package]]
-name = "infra"
-version = "0.1.0"
-dependencies = [
- "num-bigint",
- "parking_lot",
- "widestring",
 ]
 
 [[package]]

@@ -1,6 +1,6 @@
 mod conv {
     use std::error::Error;
-    use infra::{primitives::IString, structs::{List, ListCore}};
+    use deadflies_rust_infra::{primitives::IString, structs::{List, ListCore}};
     use num_bigint::{BigInt, ToBigInt};
     use crate::types::{JBigInt, JType, Key, Number, Object};
     
@@ -613,7 +613,7 @@ mod test_compare {
 
 mod object_ops {
     use std::{error::Error, sync::Arc};
-    use infra::{primitives::IString, structs::{List, ListCore}};
+    use deadflies_rust_infra::{primitives::IString, structs::{List, ListCore}};
     use crate::types::{ClassFieldDef, ConsFunc, Func, JType, Key, Number, Obj, ObjKind, Object, PrivElemKind, PrivName, PrivateElement, PropDesc, PropDescData, PropDescType, Todo};
 
     #[derive(Debug, Clone, Copy, PartialEq)]
@@ -1301,7 +1301,7 @@ mod object_ops {
 
 mod iterator_ops {
     use std::{error::Error, sync::Arc};
-    use infra::{primitives::IString, structs::{List, ListCore}};
+    use deadflies_rust_infra::{primitives::IString, structs::{List, ListCore}};
     use crate::types::{Func, JType, Key, Obj, Object};
 
     #[allow(dead_code)] // TODO: unfinished
