@@ -1,0 +1,6 @@
+					x = s * radix^(n - k)
+	            x / s = radix^(n - k)
+     log_radix(x / s) = n - k
+ log_radix(x / s) + k = n
+
+x / radix^(n - k) = s
