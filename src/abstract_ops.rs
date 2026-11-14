@@ -612,8 +612,8 @@ mod test_compare {
 }
 
 mod object_ops {
-    use std::{error::Error, sync::Arc};
-    use deadflies_rust_infra::{primitives::IString, structs::{List, ListCore}};
+    use std::{error::Error, str::FromStr, sync::Arc};
+    use deadflies_rust_infra::structs::{List, ListCore};
     use crate::types::{ClassFieldDef, ConsFunc, Func, JType, Key, Number, Obj, ObjKind, Object, PrivElemKind, PrivName, PrivateElement, PropDesc, PropDescData, PropDescType, Todo};
 
     #[derive(Debug, Clone, Copy, PartialEq)]
@@ -840,7 +840,7 @@ mod object_ops {
         #[allow(clippy::cast_possible_truncation)] // intentional here, to_length returns an f64 with no fractional part
         #[allow(clippy::cast_sign_loss)] // intentional here, to_length returns non-negative
         pub fn length_of_array_like(&self) -> Result<usize, Box<dyn Error>> {
-            Ok(self.get(&Key::String(IString::from_str("length")))?.to_length()? as usize)
+            Ok(self.get(&Key::from_str("length")?)?.to_length()? as usize)
         }
 
         #[must_use]
@@ -860,7 +860,7 @@ mod object_ops {
         /// value associated with %Symbol.species% is not undefined, null, or
         /// a constructor.
         pub fn species_constructor(&self, default_ctor: Arc<ConsFunc>) -> Result<Arc<ConsFunc>, Box<dyn Error>> {
-            let ctor = self.get(&Key::String(IString::from_str("constructor")))?;
+            let ctor = self.get(&Key::from_str("constructor")?)?;
 
             match ctor {
                 JType::Undefined => Ok(default_ctor),
@@ -1028,6 +1028,7 @@ mod object_ops {
         /// accessor element with no setter.
         #[allow(unused_variables)] // TODO: unfinished
         #[allow(clippy::needless_pass_by_value)] // TODO: unfinished
+        #[allow(clippy::redundant_else)] // TODO: unfinished
         pub fn private_set(&self, name: Arc<PrivName>, val: JType) -> Result<(), Box<dyn Error>> {
             if let Some(entry) = self.private_element_find(&name) {
                 match entry.kind {
@@ -1132,6 +1133,7 @@ mod object_ops {
         /// requested valid property keys only and an indexed element is not a
         /// valid `Key`.
         #[allow(clippy::cast_precision_loss)] // the cast in question shouldn't ever cause problems, as an object that large would already have caused an OOM
+        #[allow(clippy::redundant_else)] // TODO: unfinished
         pub fn create_list_from_array_like(&self, valid_types: Option<ElemType>) -> Result<List<JType>, Box<dyn Error>> {
             let valid_types = valid_types.unwrap_or(ElemType::All);
 
@@ -1172,6 +1174,7 @@ mod object_ops {
         /// said, if this happens, something is probably very very wrong,
         /// unless `self` is exotic.
         #[allow(unused_variables)] // TODO: unfinished
+        #[allow(clippy::redundant_else)] // TODO: unfinished
         pub fn ordinary_has_instance(&self, instance: &JType) -> Result<bool, Box<dyn Error>> {
             if let Some(obj) = self.is_callable() {
                 if obj.get_kind() == ObjKind::BoundFunc {
@@ -1192,6 +1195,7 @@ mod object_ops {
         /// collection has >= 2^53-1 items.
         #[allow(unused_variables)] // TODO: unfinished
         #[allow(unused_mut)] // TODO: unfinished
+        #[allow(clippy::redundant_else)] // TODO: unfinished
         pub fn group_by(&self, callback: &JType, key_coercion: &KeyCoercion) -> Result<List<Group>, Box<dyn Error>> {
             self.require_object_coercible()?;
             if let Some(callback) = callback.is_callable() {
@@ -1231,6 +1235,7 @@ mod object_ops {
         /// `home` are the same `Object`.
         #[allow(unused_variables)] // TODO: unfinished
         #[allow(clippy::needless_pass_by_value)] // TODO: unfinished
+        #[allow(clippy::redundant_else)] // TODO: unfinished
         pub fn setter_that_ignores_prototype_properties(&self, home: &Object, key: Key, val: JType) -> Result<(), Box<dyn Error>> {
             if let JType::Object(this) = self {
                 if this == home {
@@ -1300,8 +1305,8 @@ mod object_ops {
 }
 
 mod iterator_ops {
-    use std::{error::Error, sync::Arc};
-    use deadflies_rust_infra::{primitives::IString, structs::{List, ListCore}};
+    use std::{error::Error, str::FromStr, sync::Arc};
+    use deadflies_rust_infra::structs::{List, ListCore};
     use crate::types::{Func, JType, Key, Obj, Object};
 
     #[allow(dead_code)] // TODO: unfinished
@@ -1312,7 +1317,15 @@ mod iterator_ops {
     }
 
     impl IterRec {
-        // TODO: FIXME ASAP: look at locking these things, should probably provide synchronous access
+        /*
+         * NOTE: should be fine to operate without a lock here, since all we do
+         * is toggle self.done to true and never back to false. in the case of
+         * a data race, one thread will lose, but all that will happen is that
+         * self.done is set to true twice, causing no issues in this specific
+         * function. the losing thread will get the error, as it should. most
+         * of the issues with the data race will be within the next_method call
+         * on the Javascript side, meaning it should be dealt with there.
+         */
         pub fn next(&mut self, val: Option<JType>) -> Result<Object, Box<dyn Error>> {
             let result = self.next_method.call(&JType::Object(self.iterator.clone_shallow()), val.map(|v| {
                 let mut ret = List::new();
@@ -1344,9 +1357,14 @@ mod iterator_ops {
         pub fn get_iterator_direct(&self) -> Result<IterRec, Box<dyn Error>> {
             Ok(IterRec {
                 iterator: self.clone_shallow(),
-                next_method: self.get(&Key::String(IString::from_str("next")))?,
+                next_method: self.get(&Key::from_str("next")?)?,
                 done: false,
             })
+        }
+
+        #[allow(clippy::missing_errors_doc)] // we only propagate errors from downstream here
+        pub fn iterator_complete(&self) -> Result<bool, Box<dyn Error>> {
+            Ok(self.get(&Key::from_str("done")?)?.to_bool())
         }
     }
 

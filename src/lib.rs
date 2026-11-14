@@ -5,7 +5,7 @@ mod abstract_ops;
 
 pub mod types {
     use deadflies_rust_infra::{primitives::IString, structs::{ArcRw, List, Map}};
-    use std::{error::Error, ops::{Add, Div, Mul, Neg, Not, Rem, Shl, Sub}, sync::{Arc, Weak, atomic::{AtomicBool, AtomicU64, Ordering}}};
+    use std::{error::Error, ops::{Add, Div, Mul, Neg, Not, Rem, Shl, Sub}, str::FromStr, sync::{Arc, Weak, atomic::{AtomicBool, AtomicU64, Ordering}}};
     use parking_lot::{Mutex, RwLock};
     use num_bigint::BigInt;
     use astro_float::{BigFloat, Consts, RoundingMode};
@@ -951,6 +951,14 @@ pub mod types {
         }
     }
 
+    impl FromStr for Key {
+        type Err = !;
+    
+        fn from_str(s: &str) -> Result<Self, Self::Err> {
+            Ok(Key::String(IString::from_str(s)))
+        }
+    }
+
     #[derive(Debug, Clone)]
     pub struct PropDescData {
         pub val: Option<JType>,
@@ -1609,15 +1617,14 @@ pub mod types {
         /// arguments `self` (a Reference) and `val` (an ECMAScript language
         /// value) and returns a Result containing () or an error.
         /// 
-        /// # Errors
-        /// 
         /// # Panics
         /// 
         /// Panics if `self` is an unresolvable reference, or if `self.base` is
         /// not an Environment Record.
         #[allow(unused_variables)] // TODO: unfinished
-        #[allow(clippy::missing_errors_doc)] // we're propagating errors from elsewhere
+        #[allow(clippy::missing_errors_doc)] // we only propagate errors from elsewhere here
         #[allow(clippy::needless_pass_by_value)]  // TODO: unfinished
+        #[allow(clippy::redundant_else)] // TODO: unfinished
         pub fn initialize_referenced_binding(&self, val: JType) -> Result<(), Box<dyn Error>> {
             assert!(!self.is_unresolvable());
 
