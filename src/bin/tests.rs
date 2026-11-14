@@ -1,4 +1,4 @@
-use ecma_262::types::Number;
+use deadflies_rust_ecma_262::types::Number;
 
 fn main() {
     let num = 943.646;

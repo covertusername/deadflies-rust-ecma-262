@@ -1,10 +1,10 @@
 [package]
-name = "ecma-262"
+name = "deadflies-rust-ecma-262"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-infra = {path = "../infra"}
+infra = {path = "../deadflies-rust-infra"}
 parking_lot = { version = "0.12.5", features = ["arc_lock"] }
 num-bigint = "0.5.1"
 astro-float = "0.9.6" # stupid, only for Number::to_string
