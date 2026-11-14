@@ -68,7 +68,6 @@ dependencies = [
 name = "deadflies-rust-infra"
 version = "0.1.0"
 dependencies = [
- "num-bigint",
  "parking_lot",
  "widestring",
 ]
