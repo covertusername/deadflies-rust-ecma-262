@@ -1366,6 +1366,11 @@ mod iterator_ops {
         pub fn iterator_complete(&self) -> Result<bool, Box<dyn Error>> {
             Ok(self.get(&Key::from_str("done")?)?.to_bool())
         }
+
+        #[allow(clippy::missing_errors_doc)] // we only propagate errors from downstream here
+        pub fn iterator_value(&self) -> Result<JType, Box<dyn Error>> {
+            self.get(&Key::from_str("value")?)
+        }
     }
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
