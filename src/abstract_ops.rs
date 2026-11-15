@@ -1367,6 +1367,20 @@ mod iterator_ops {
                 },
             }
         }
+
+        pub fn step_value(&mut self) -> Result<Option<JType>, Box<dyn Error>> {
+            if let Some(result) = self.step()? {
+                match result.iterator_value() {
+                    Ok(val) => Ok(Some(val)),
+                    Err(e) => {
+                        self.done = true;
+                        Err(e)
+                    },
+                }
+            } else {
+                Ok(None)
+            }
+        }
     }
 
     impl Object {
