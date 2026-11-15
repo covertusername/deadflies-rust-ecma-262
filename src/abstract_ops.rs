@@ -1350,6 +1350,23 @@ mod iterator_ops {
                 },
             }
         }
+
+        pub fn step(&mut self) -> Result<Option<Object>, Box<dyn Error>> {
+            let result = self.next(None)?;
+
+            match result.iterator_complete() {
+                Err(e) => {
+                    self.done = true;
+                    Err(e)
+                },
+                Ok(done) => if done {
+                    self.done = true;
+                    Ok(None)
+                } else {
+                    Ok(Some(result))
+                },
+            }
+        }
     }
 
     impl Object {
