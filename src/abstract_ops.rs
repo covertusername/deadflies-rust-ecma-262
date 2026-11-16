@@ -1435,6 +1435,13 @@ mod iterator_ops {
                 result
             }
         }
+
+        pub fn close_all(iters: &List<IterRec>, mut result: Result<JType, Box<dyn Error>>) -> Result<JType, Box<dyn Error>> {
+            for iter in iters.iter().rev() {
+                result = iter.read().close(result);
+            }
+            result
+        }
     }
 
     impl Object {
