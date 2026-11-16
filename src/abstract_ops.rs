@@ -1442,6 +1442,27 @@ mod iterator_ops {
             }
             result
         }
+
+        #[allow(unused_variables)] // TODO: unfinished
+        pub fn async_close(&self, result: Result<JType, Box<dyn Error>>) -> Result<JType, Box<dyn Error>> {
+            let mut inner_res = self.iterator.get_method(&Key::from_str("return")?).map(|x| match x {
+                Some(obj) => JType::Object(obj),
+                None => JType::Undefined,
+            });
+
+            if let Ok(ret) = inner_res {
+                if matches!(ret, JType::Undefined) {
+                    return result;
+                }
+                inner_res = ret.call(&JType::Object(self.iterator.clone_shallow()), None);
+                if let Ok(val) = inner_res {
+                    // TODO: Await
+                    todo!()
+                }
+                todo!()
+            }
+            todo!()
+        }
     }
         
     #[macro_export]
