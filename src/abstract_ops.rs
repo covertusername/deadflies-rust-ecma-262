@@ -1064,6 +1064,36 @@ mod object_ops {
             // TODO: Full function object implementation. We currently don't track internal slots.
             todo!()
         }
+
+        #[allow(clippy::missing_errors_doc)] // we only propagate errors from downstream here
+        pub fn get_v(&self, key: &Key) -> Result<JType, Box<dyn Error>> {
+            self.inner.get(key, &JType::Object(self.clone_shallow()))
+        }
+
+        /// The abstract operation `get_method` takes arguments `self` (an
+        /// `Object`) and `key` (a `Key`) and returns a Result containing
+        /// either a `Func` `Object` or `None`, or an error. It is used to get
+        /// the value of a specific property of an `JType` when the value of
+        /// the property is expected to be a function.
+        /// 
+        /// # Errors
+        /// 
+        /// Throws a `TypeError` if the property matching `key` is not a
+        /// function.
+        #[allow(clippy::missing_panics_doc)] // if we panic this is a bug
+        pub fn get_method(&self, key: &Key) -> Result<Option<Object>, Box<dyn Error>> {
+            let func = self.get_v(key)?;
+
+            match func {
+                JType::Undefined | JType::Null => Ok(None),
+                _ => if let Some(obj) = func.is_callable() {
+                    Ok(Some(obj))
+                } else {
+                    // TODO: Error Objects (Box<dyn Error> is a placeholder)
+                    todo!()
+                },
+            }
+        }
     }
 
     pub enum KeyCoercion {
@@ -1379,6 +1409,30 @@ mod iterator_ops {
                 }
             } else {
                 Ok(None)
+            }
+        }
+        
+        pub fn close(&self, result: Result<JType, Box<dyn Error>>) -> Result<JType, Box<dyn Error>> {
+            let mut inner_res = self.iterator.get_method(&Key::from_str("return")?).map(|x| match x {
+                Some(obj) => JType::Object(obj),
+                None => JType::Undefined,
+            });
+
+            if let Ok(ret) = inner_res {
+                if matches!(ret, JType::Undefined) {
+                    return result;
+                }
+                inner_res = ret.call(&JType::Object(self.iterator.clone_shallow()), None);
+            }
+            if result.is_err() {
+                result
+            } else if inner_res.is_err() {
+                inner_res
+            } else if inner_res.is_ok_and(|x| !matches!(x, JType::Object(_))) {
+                // TODO: Error Objects (Box<dyn Error> is a placeholder)
+                todo!()
+            } else {
+                result
             }
         }
     }
