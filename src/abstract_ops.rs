@@ -1592,5 +1592,12 @@ mod iterator_ops {
             }
             todo!()
         }
+
+        #[must_use]
+        #[allow(unused_variables)] // TODO: unfinished
+        pub fn create_iterator_result_object(&self, done: bool) -> Object {
+            // TODO: OrdinaryObjectCreate
+            todo!()
+        }
     }
 }
