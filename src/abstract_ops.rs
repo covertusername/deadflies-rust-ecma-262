@@ -1468,7 +1468,7 @@ mod iterator_ops {
     #[macro_export]
     macro_rules! if_abrupt_close_iterator {
         ($val:ident, $iter_rec:ident) => {
-            match val {
+            match $val {
                 Err(e) => return $iter_rec.close(Err(e))?
                 Ok(val) => val
             }
@@ -1478,8 +1478,18 @@ mod iterator_ops {
     #[macro_export]
     macro_rules! if_abrupt_close_iterators {
         ($val:ident, $iter_recs:ident) => {
-            match val {
+            match $val {
                 Err(e) => return IterRec::close_all($iter_recs, Err(e))?
+                Ok(val) => val
+            }
+        };
+    }
+
+    #[macro_export]
+    macro_rules! if_abrupt_close_async_iterator {
+        ($val:ident, $iter_rec:ident) => {
+            match $val {
+                Err(e) => return $iter_rec.async_close(Err(e))?
                 Ok(val) => val
             }
         };
