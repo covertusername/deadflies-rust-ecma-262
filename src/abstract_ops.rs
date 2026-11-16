@@ -1463,6 +1463,20 @@ mod iterator_ops {
             }
             todo!()
         }
+
+        #[must_use]
+        #[allow(unused_variables)] // TODO: unfinished
+        #[allow(clippy::needless_pass_by_value)] // TODO: unfinished
+        pub fn from_list(list: List<JType>) -> IterRec {
+            let closure = || -> Result<(), Box<dyn Error>> {
+                for val in list.iter() {
+                    // TODO: GeneratorYield
+                    todo!()
+                }
+                todo!()
+            };
+            todo!()
+        }
     }
         
     #[macro_export]
