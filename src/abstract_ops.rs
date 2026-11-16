@@ -1443,6 +1443,16 @@ mod iterator_ops {
             result
         }
     }
+        
+    #[macro_export]
+    macro_rules! if_abrupt_close_iterator {
+        ($val:ident, $iter_rec:ident) => {
+            match val {
+                Err(e) => return $iter_rec.close(Err(e))?
+                Ok(val) => val
+            }
+        }
+    }
 
     impl Object {
         #[allow(clippy::missing_errors_doc)] // we only propagate errors from downstream here
