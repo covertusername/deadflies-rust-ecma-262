@@ -1451,7 +1451,17 @@ mod iterator_ops {
                 Err(e) => return $iter_rec.close(Err(e))?
                 Ok(val) => val
             }
-        }
+        };
+    }
+
+    #[macro_export]
+    macro_rules! if_abrupt_close_iterators {
+        ($val:ident, $iter_recs:ident) => {
+            match val {
+                Err(e) => return IterRec::close_all($iter_recs, Err(e))?
+                Ok(val) => val
+            }
+        };
     }
 
     impl Object {
