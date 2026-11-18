@@ -1647,6 +1647,23 @@ mod disposable_ops {
         dispose_method: Option<Object>,
     }
 
+    impl Disposable {
+        #[allow(unused_variables)] // TODO: unfinished
+        #[allow(unused_assignments)] // TODO: unfinished
+        pub fn create(mut val: JType, kind: DisposableKind, mut method: Option<Object>) -> Result<Disposable, Box<dyn Error>> {
+            if method.is_none() {
+                if matches!(val, JType::Null | JType::Undefined) {
+                    val = JType::Undefined;
+                    method = None;
+                } else {
+                    // TODO: GetDisposeMethod
+                    todo!()
+                }
+            }
+            todo!()
+        }
+    }
+
     #[allow(unused_variables)] // TODO: unfinished
     #[allow(clippy::needless_pass_by_value)] // TODO: unfinished
     pub fn add_disposable(stack: &mut List<Disposable>, val: JType, kind: DisposableKind, method: Option<Object>) -> Result<(), Box<dyn Error>> {
