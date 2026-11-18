@@ -1628,3 +1628,34 @@ mod iterator_ops {
         }
     }
 }
+
+#[allow(dead_code)] // TODO: extremely unfinished
+mod disposable_ops {
+    use std::error::Error;
+    use deadflies_rust_infra::structs::List;
+    use crate::types::{JType, Object};
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum DisposableKind {
+        Sync,
+        Async,
+    }
+
+    pub struct Disposable {
+        resource_value: Option<Object>,
+        kind: DisposableKind,
+        dispose_method: Option<Object>,
+    }
+
+    #[allow(unused_variables)] // TODO: unfinished
+    #[allow(clippy::needless_pass_by_value)] // TODO: unfinished
+    pub fn add_disposable(stack: &mut List<Disposable>, val: JType, kind: DisposableKind, method: Option<Object>) -> Result<(), Box<dyn Error>> {
+        if let Some(method) = method {
+            assert!(matches!(val, JType::Undefined));
+
+            // TODO: CreateDisposableResource
+            todo!()
+        }
+        todo!()
+    }
+}
