@@ -1477,6 +1477,19 @@ mod iterator_ops {
             };
             todo!()
         }
+
+        // IteratorToList
+        pub fn as_list(&mut self) -> Result<List<JType>, Box<dyn Error>> {
+            let mut values = List::new();
+
+            loop {
+                if let Some(next) = self.step_value()? {
+                    values.append(next);
+                } else {
+                    return Ok(values);
+                }
+            }
+        }
     }
         
     #[macro_export]
