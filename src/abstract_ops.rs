@@ -1633,7 +1633,7 @@ mod iterator_ops {
 mod disposable_ops {
     use std::error::Error;
     use deadflies_rust_infra::structs::List;
-    use crate::types::{JType, Object};
+    use crate::types::{JType, Key, Object};
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub enum DisposableKind {
@@ -1661,6 +1661,38 @@ mod disposable_ops {
                 }
             }
             todo!()
+        }
+    }
+
+    impl JType {
+        #[allow(clippy::missing_errors_doc)] // we only propagate errors from downstream here
+        #[allow(unused_variables)] // TODO: unfinished
+        pub fn get_dispose_method(&self, kind: DisposableKind) -> Result<Option<Object>, Box<dyn Error>> {
+            if let JType::Object(val) = self {
+                match kind {
+                    DisposableKind::Sync => val.get_method(&Key::get_known(crate::types::SymNames::Dispose)),
+                    DisposableKind::Async => {
+                        match val.get_method(&Key::get_known(crate::types::SymNames::AsyncDispose))? {
+                            Some(async_method) => Ok(Some(async_method)),
+                            None => {
+                                match val.get_method(&Key::get_known(crate::types::SymNames::Dispose))? {
+                                    None => Ok(None),
+                                    Some(sync_method) => {
+                                        let closure = || {
+                                            // TODO: Environment records, "this" value
+                                            todo!()
+                                        };
+                                        todo!()
+                                    },
+                                }
+                            },
+                        }
+                    },
+                }
+            } else {
+                // TODO: Error Objects (Box<dyn Error> is a placeholder)
+                todo!()
+            }
         }
     }
 
