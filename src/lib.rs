@@ -3,6 +3,7 @@
 mod util;
 mod abstract_ops;
 mod syntax_directed_ops;
+mod exec;
 
 pub mod types {
     use deadflies_rust_infra::{primitives::IString, structs::{ArcRw, List, Map}};
