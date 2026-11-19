@@ -1707,4 +1707,21 @@ mod disposable_ops {
         }
         todo!()
     }
+
+    #[allow(unused_mut)] // TODO: unfinished
+    #[allow(unused_variables)] // TODO: unfinished
+    pub fn dispose(stack: &List<Disposable>, result: Result<Option<JType>, Box<dyn Error>>) -> Result<Option<JType>, Box<dyn Error>> {
+        let mut needs_await = false;
+        let mut has_awaited = false;
+        let mut output_result = result;
+
+        for resource in stack.iter().rev() {
+            if resource.read().kind == DisposableKind::Sync && needs_await && !has_awaited {
+                // TODO: Await
+                todo!()
+            }
+            todo!()
+        }
+        todo!()
+    }
 }
