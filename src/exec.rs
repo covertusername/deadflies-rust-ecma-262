@@ -249,8 +249,8 @@ mod env {
             Ok(())
         }
     
-        fn create_immutable_binding(&self, name: IString, strict: bool) -> Result<(), Box<dyn Error>> {
-            todo!()
+        fn create_immutable_binding(&self, _name: IString, _strict: bool) -> Result<(), Box<dyn Error>> {
+            unimplemented!() // explicitly unimplemented by specification
         }
     
         fn initialize_binding(&self, name: &IString, val: JType) -> Result<(), Box<dyn Error>> {
