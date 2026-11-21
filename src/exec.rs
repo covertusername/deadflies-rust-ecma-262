@@ -268,7 +268,15 @@ mod env {
         }
     
         fn get_binding_value(&self, name: &IString, strict: bool) -> Result<JType, Box<dyn Error>> {
-            todo!()
+            if self.binding_object.has_property(&name.as_key())? {
+                self.binding_object.get(&name.as_key())
+            } else {
+                if strict {
+                    // TODO: Error Objects (Box<dyn Error> is a placeholder)
+                    todo!()
+                }
+                todo!()
+            }
         }
     
         fn delete_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
