@@ -280,7 +280,7 @@ mod env {
         }
     
         fn delete_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
-            todo!()
+            self.binding_object.inner.clone().delete(name.as_key())
         }
     
         fn has_this_binding(&self) -> bool {
