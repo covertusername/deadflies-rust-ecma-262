@@ -245,8 +245,7 @@ mod env {
                 }),
                 enumerable: Some(true),
                 configurable: Some(deletable),
-            })?;
-            Ok(())
+            })
         }
     
         fn create_immutable_binding(&self, _name: IString, _strict: bool) -> Result<(), Box<dyn Error>> {
@@ -254,7 +253,7 @@ mod env {
         }
     
         fn initialize_binding(&self, name: &IString, val: JType) -> Result<(), Box<dyn Error>> {
-            todo!()
+            self.set_mutable_binding(name.clone(), val, false)
         }
     
         fn set_mutable_binding(&self, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>> {
