@@ -36,13 +36,13 @@ mod env {
     }
 
     pub trait Env: Send + Sync + std::fmt::Debug {
-        fn has_binding(&self, name: IString) -> Result<bool, Box<dyn Error>>;
+        fn has_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>>;
 
         fn create_mutable_binding(&self, name: IString, deletable: bool) -> Result<(), Box<dyn Error>>;
 
         fn create_immutable_binding(&self, name: IString, strict: bool) -> Result<(), Box<dyn Error>>;
 
-        fn initialize_binding(&self, name: IString, val: JType) -> Result<(), Box<dyn Error>>;
+        fn initialize_binding(&self, name: &IString, val: JType) -> Result<(), Box<dyn Error>>;
 
         fn set_mutable_binding(&self, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>>;
 
@@ -99,7 +99,19 @@ mod env {
             Ok(())
         }
 
-        fn der_set_mutable_binding(&self, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>>;
+        #[allow(unused_variables)] // TODO: unfinished
+        #[allow(clippy::redundant_else)] // TODO: unfinished
+        fn der_set_mutable_binding(&self, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>> {
+            if self.get_bindings().read().contains_key(&name).is_none() {
+                if strict {
+                    // TODO: Error Objects (Box<dyn Error> is a placeholder)
+                    todo!()
+                } else {
+                    todo!()
+                }
+            }
+            todo!()
+        }
 
         fn der_get_binding_value(&self, name: IString, strict: bool) -> Result<JType, Box<dyn Error>>;
 
