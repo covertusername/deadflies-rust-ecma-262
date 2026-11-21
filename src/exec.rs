@@ -3,7 +3,7 @@ mod env {
     use std::{error::Error, sync::{Arc, Weak}};
     use deadflies_rust_infra::{primitives::IString, structs::{ArcRw, List, Map}};
     use parking_lot::RwLock;
-    use crate::{abstract_ops::disposable_ops::Disposable, types::{JString, JType, Key, Object}};
+    use crate::{abstract_ops::disposable_ops::Disposable, types::{JString, JType, Key, Object, PropDesc, PropDescData}};
 
     #[derive(Debug, Clone)]
     pub struct IndirectBinding {
@@ -238,7 +238,15 @@ mod env {
         }
     
         fn create_mutable_binding(&self, name: IString, deletable: bool) -> Result<(), Box<dyn Error>> {
-            todo!()
+            self.binding_object.define_property_or_throw(Key::String(name), PropDesc {
+                kind: crate::types::PropDescType::Data(PropDescData {
+                    val: Some(JType::Undefined),
+                    writable: Some(true),
+                }),
+                enumerable: Some(true),
+                configurable: Some(deletable),
+            })?;
+            Ok(())
         }
     
         fn create_immutable_binding(&self, name: IString, strict: bool) -> Result<(), Box<dyn Error>> {
