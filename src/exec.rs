@@ -38,17 +38,17 @@ mod env {
     pub trait Env: Send + Sync + std::fmt::Debug {
         fn has_binding(&self, name: IString) -> Result<bool, Box<dyn Error>>;
 
-        fn create_mutable_binding(self: Arc<Self>, name: IString, deletable: bool) -> Result<(), Box<dyn Error>>;
+        fn create_mutable_binding(&self, name: IString, deletable: bool) -> Result<(), Box<dyn Error>>;
 
-        fn create_immutable_binding(self: Arc<Self>, name: IString, strict: bool) -> Result<(), Box<dyn Error>>;
+        fn create_immutable_binding(&self, name: IString, strict: bool) -> Result<(), Box<dyn Error>>;
 
-        fn initialize_binding(self: Arc<Self>, name: IString, val: JType) -> Result<(), Box<dyn Error>>;
+        fn initialize_binding(&self, name: IString, val: JType) -> Result<(), Box<dyn Error>>;
 
-        fn set_mutable_binding(self: Arc<Self>, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>>;
+        fn set_mutable_binding(&self, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>>;
 
         fn get_binding_value(&self, name: IString, strict: bool) -> Result<JType, Box<dyn Error>>;
 
-        fn delete_binding(self: Arc<Self>, name: IString) -> Result<bool, Box<dyn Error>>;
+        fn delete_binding(&self, name: IString) -> Result<bool, Box<dyn Error>>;
 
         fn has_this_binding(&self) -> bool;
 
@@ -80,15 +80,15 @@ mod env {
             Ok(())
         }
 
-        fn der_create_immutable_binding(self: Arc<Self>, name: IString, strict: bool) -> Result<(), Box<dyn Error>>;
+        fn der_create_immutable_binding(&self, name: IString, strict: bool) -> Result<(), Box<dyn Error>>;
 
-        fn der_initialize_binding(self: Arc<Self>, name: IString, val: JType) -> Result<(), Box<dyn Error>>;
+        fn der_initialize_binding(&self, name: IString, val: JType) -> Result<(), Box<dyn Error>>;
 
-        fn der_set_mutable_binding(self: Arc<Self>, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>>;
+        fn der_set_mutable_binding(&self, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>>;
 
         fn der_get_binding_value(&self, name: IString, strict: bool) -> Result<JType, Box<dyn Error>>;
 
-        fn der_delete_binding(self: Arc<Self>, name: IString) -> Result<bool, Box<dyn Error>>;
+        fn der_delete_binding(&self, name: IString) -> Result<bool, Box<dyn Error>>;
 
         fn der_has_this_binding(&self) -> bool;
 
