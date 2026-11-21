@@ -284,23 +284,27 @@ mod env {
         }
     
         fn has_this_binding(&self) -> bool {
-            todo!()
+            false
         }
     
         fn get_this_binding(&self) -> Result<JType, Box<dyn Error>> {
-            todo!()
+            unimplemented!() // explicitly unimplemented by specification
         }
     
         fn has_super_binding(&self) -> bool {
-            todo!()
+            false
         }
     
         fn with_base_object(&self) -> Option<Object> {
-            todo!()
+            if self.is_with_env {
+                Some(self.binding_object.clone_shallow())
+            } else {
+                None
+            }
         }
     
         fn get_bindings(&self) -> ArcRw<Map<IString, BindingDesc>> {
-            todo!()
+            unimplemented!() // not applicable for this kind of Env
         }
     }
 }
