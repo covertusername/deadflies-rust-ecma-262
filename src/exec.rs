@@ -4,8 +4,33 @@ mod env {
     use deadflies_rust_infra::{primitives::IString, structs::{ArcRw, Map}};
     use crate::types::{JType, Object};
 
+    #[derive(Debug, Clone)]
+    pub struct IndirectBinding {
+        target_mod: !, // TODO: Module Records
+        bind_key: IString,
+    }
+
+    #[derive(Debug, Clone)]
+    pub enum BindingType {
+        None, // uninitialized
+        Direct(JType),
+        Indirect(IndirectBinding),
+    }
+
+    /*
+     * not a specification type, but contains things marked as "to be recorded"
+     * within a DeclarativeEnv. spec doesn't say how, probably impl-defined
+     */
+    #[derive(Debug, Clone)]
+    pub struct BindingDesc {
+        val: BindingType, // if not initialized, is BindingValType::None
+        mutable: bool,
+        deletable: bool,
+        strict: bool,
+    }
+
     pub struct Environment {
-        bindings: ArcRw<Map<IString, JType>>,
+        bindings: ArcRw<Map<IString, BindingDesc>>,
         outer_env: Option<Weak<Environment>>,
         inner: Arc<dyn Env>,
     }
@@ -35,7 +60,7 @@ mod env {
 
         // implementation-specific functions begin here
 
-        fn get_bindings(&self) -> ArcRw<Map<IString, JType>>;
+        fn get_bindings(&self) -> ArcRw<Map<IString, BindingDesc>>;
     }
 
     pub trait DeclEnv: Env {
@@ -43,7 +68,17 @@ mod env {
             Ok(self.get_bindings().read().contains_key(name).is_some())
         }
 
-        fn der_create_mutable_binding(self: Arc<Self>, name: IString, deletable: bool) -> Result<(), Box<dyn Error>>;
+        fn der_create_mutable_binding(&self, name: IString, deletable: bool) -> Result<(), Box<dyn Error>> {
+            assert!(!self.der_has_binding(&name)?);
+
+            self.get_bindings().write().set(name, BindingDesc {
+                val: BindingType::None,
+                mutable: true,
+                deletable,
+                strict: false,
+            });
+            Ok(())
+        }
 
         fn der_create_immutable_binding(self: Arc<Self>, name: IString, strict: bool) -> Result<(), Box<dyn Error>>;
 
