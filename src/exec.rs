@@ -134,12 +134,20 @@ mod env {
             }
         }
 
-        fn der_has_this_binding(&self) -> bool;
+        fn der_has_this_binding(&self) -> bool {
+            false
+        }
 
-        fn der_get_this_binding(&self) -> Result<JType, Box<dyn Error>>;
+        fn der_get_this_binding(&self) -> Result<JType, Box<dyn Error>> {
+            unimplemented!() // explicitly unimplemented by specification
+        }
 
-        fn der_has_super_binding(&self) -> bool;
+        fn der_has_super_binding(&self) -> bool {
+            false
+        }
 
-        fn der_with_base_object(&self) -> Option<Object>;
+        fn der_with_base_object(&self) -> Option<Object> {
+            None
+        }
     }
 }
