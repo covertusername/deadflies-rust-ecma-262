@@ -46,7 +46,7 @@ mod env {
 
         fn set_mutable_binding(&self, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>>;
 
-        fn get_binding_value(&self, name: IString, strict: bool) -> Result<JType, Box<dyn Error>>;
+        fn get_binding_value(&self, name: &IString, strict: bool) -> Result<JType, Box<dyn Error>>;
 
         fn delete_binding(&self, name: IString) -> Result<bool, Box<dyn Error>>;
 
@@ -113,7 +113,15 @@ mod env {
             todo!()
         }
 
-        fn der_get_binding_value(&self, name: IString, strict: bool) -> Result<JType, Box<dyn Error>>;
+        fn der_get_binding_value(&self, name: &IString, _strict: bool) -> Result<JType, Box<dyn Error>> {
+            assert!(self.der_has_binding(name)?);
+
+            if matches!(self.get_bindings().read().get(name).unwrap().val, BindingType::None) {
+                // TODO: Error Objects (Box<dyn Error> is a placeholder)
+                todo!()
+            }
+            todo!()
+        }
 
         fn der_delete_binding(&self, name: IString) -> Result<bool, Box<dyn Error>>;
 
