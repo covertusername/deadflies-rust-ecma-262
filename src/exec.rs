@@ -373,7 +373,7 @@ mod env {
         }
     
         fn has_this_binding(&self) -> bool {
-            todo!()
+            !matches!(*self.this_status.read(), FuncEnvThisState::Lexical)
         }
     
         fn get_this_binding(&self) -> Result<JType, Box<dyn Error>> {
