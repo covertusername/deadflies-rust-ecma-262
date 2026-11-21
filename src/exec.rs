@@ -3,7 +3,7 @@ mod env {
     use std::{error::Error, sync::{Arc, Weak}};
     use deadflies_rust_infra::{primitives::IString, structs::{ArcRw, List, Map}};
     use parking_lot::RwLock;
-    use crate::{abstract_ops::disposable_ops::Disposable, types::{JType, Object}};
+    use crate::{abstract_ops::disposable_ops::Disposable, types::{JString, JType, Key, Object}};
 
     #[derive(Debug, Clone)]
     pub struct IndirectBinding {
@@ -208,6 +208,77 @@ mod env {
     
         fn get_bindings(&self) -> ArcRw<Map<IString, BindingDesc>> {
             self.bindings.upgrade().unwrap()
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct ObjectEnv {
+        // NOTE: this doesn't track its own bindings, its bindings are the named properties of the binding object
+        outer_env: Option<Weak<dyn Env>>,
+        binding_object: Object,
+        is_with_env: bool,
+    }
+
+    impl Env for ObjectEnv {
+        fn has_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
+            if self.binding_object.has_property(&name.as_key())? {
+                if self.is_with_env {
+                    if let JType::Object(unscopables) = self.binding_object.get(&Key::get_known(crate::types::SymNames::Unscopables))? &&
+                        unscopables.get(&name.as_key())?.to_bool() {
+                        Ok(false)
+                    } else {
+                        Ok(true)
+                    }
+                } else {
+                    Ok(true)
+                }
+            } else {
+                Ok(false)
+            }
+        }
+    
+        fn create_mutable_binding(&self, name: IString, deletable: bool) -> Result<(), Box<dyn Error>> {
+            todo!()
+        }
+    
+        fn create_immutable_binding(&self, name: IString, strict: bool) -> Result<(), Box<dyn Error>> {
+            todo!()
+        }
+    
+        fn initialize_binding(&self, name: &IString, val: JType) -> Result<(), Box<dyn Error>> {
+            todo!()
+        }
+    
+        fn set_mutable_binding(&self, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>> {
+            todo!()
+        }
+    
+        fn get_binding_value(&self, name: &IString, strict: bool) -> Result<JType, Box<dyn Error>> {
+            todo!()
+        }
+    
+        fn delete_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
+            todo!()
+        }
+    
+        fn has_this_binding(&self) -> bool {
+            todo!()
+        }
+    
+        fn get_this_binding(&self) -> Result<JType, Box<dyn Error>> {
+            todo!()
+        }
+    
+        fn has_super_binding(&self) -> bool {
+            todo!()
+        }
+    
+        fn with_base_object(&self) -> Option<Object> {
+            todo!()
+        }
+    
+        fn get_bindings(&self) -> ArcRw<Map<IString, BindingDesc>> {
+            todo!()
         }
     }
 }

@@ -759,7 +759,7 @@ mod object_ops {
         }
 
         #[allow(clippy::missing_errors_doc)] // we only propagate errors from downstream here
-        pub fn has_property(&self, key: Key) -> Result<bool, Box<dyn Error>> {
+        pub fn has_property(&self, key: &Key) -> Result<bool, Box<dyn Error>> {
             self.inner.has_property(key)
         }
 

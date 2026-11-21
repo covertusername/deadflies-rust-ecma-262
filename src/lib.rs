@@ -39,6 +39,10 @@ pub mod types {
         fn is_canonical_numeric(&self) -> bool;
 
         fn is_string_well_formed_unicode(&self) -> bool;
+
+        // locally-defined functions here
+
+        fn as_key(&self) -> Key;
     }
 
     impl JString for IString {
@@ -113,6 +117,10 @@ pub mod types {
         // already implemented over in the infra crate without javascript clutter. just going to piggyback on that
         fn is_string_well_formed_unicode(&self) -> bool {
             self.is_scalar()
+        }
+        
+        fn as_key(&self) -> Key {
+            Key::String(self.clone())
         }
     }
 
@@ -1106,7 +1114,7 @@ pub mod types {
             todo!()
         }
 
-        fn has_property(&self, key: Key) -> Result<bool, Box<dyn Error>> {
+        fn has_property(&self, key: &Key) -> Result<bool, Box<dyn Error>> {
             todo!()
         }
 
