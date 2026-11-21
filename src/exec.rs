@@ -377,7 +377,14 @@ mod env {
         }
     
         fn get_this_binding(&self) -> Result<JType, Box<dyn Error>> {
-            todo!()
+            match *self.this_status.read() {
+                FuncEnvThisState::Lexical => panic!("FuncEnv::get_this_binding: no this binding for lexical function environments"),
+                FuncEnvThisState::Uninitialized => {
+                    // TODO: Error Objects (Box<dyn Error> is a placeholder)
+                    todo!()
+                },
+                FuncEnvThisState::Initialized => todo!(),
+            }
         }
     
         fn has_super_binding(&self) -> bool {
