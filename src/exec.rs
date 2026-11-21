@@ -31,7 +31,7 @@ mod env {
 
     pub struct Environment {
         bindings: ArcRw<Map<IString, BindingDesc>>,
-        outer_env: Option<Weak<Environment>>,
+        outer_env: Option<Weak<dyn Env>>,
         inner: Arc<dyn Env>,
     }
 
