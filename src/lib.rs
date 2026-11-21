@@ -1086,7 +1086,7 @@ pub mod types {
             todo!()
         }
 
-        fn set_prototype_of(&mut self, proto: Option<&Object>) -> Result<bool, Box<dyn Error>> {
+        fn set_prototype_of(self: Arc<Self>, proto: Option<&Object>) -> Result<bool, Box<dyn Error>> {
             todo!()
         }
 
