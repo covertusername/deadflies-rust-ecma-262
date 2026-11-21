@@ -48,7 +48,7 @@ mod env {
 
         fn get_binding_value(&self, name: &IString, strict: bool) -> Result<JType, Box<dyn Error>>;
 
-        fn delete_binding(&self, name: IString) -> Result<bool, Box<dyn Error>>;
+        fn delete_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>>;
 
         fn has_this_binding(&self) -> bool;
 
@@ -123,7 +123,16 @@ mod env {
             todo!()
         }
 
-        fn der_delete_binding(&self, name: IString) -> Result<bool, Box<dyn Error>>;
+        fn der_delete_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
+            assert!(self.der_has_binding(name)?);
+            
+            if self.get_bindings().read().get(name).unwrap().deletable {
+                self.get_bindings().write().remove(|(k, _)| *k.read() == *name);
+                Ok(true)
+            } else {
+                Ok(false)
+            }
+        }
 
         fn der_has_this_binding(&self) -> bool;
 
