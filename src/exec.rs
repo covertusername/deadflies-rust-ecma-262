@@ -80,7 +80,17 @@ mod env {
             Ok(())
         }
 
-        fn der_create_immutable_binding(&self, name: IString, strict: bool) -> Result<(), Box<dyn Error>>;
+        fn der_create_immutable_binding(&self, name: IString, strict: bool) -> Result<(), Box<dyn Error>> {
+            assert!(!self.der_has_binding(&name)?);
+
+            self.get_bindings().write().set(name, BindingDesc {
+                val: BindingType::None,
+                mutable: false,
+                deletable: false,
+                strict,
+            });
+            Ok(())
+        }
 
         fn der_initialize_binding(&self, name: IString, val: JType) -> Result<(), Box<dyn Error>>;
 
