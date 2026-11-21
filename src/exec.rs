@@ -1,8 +1,9 @@
 #[allow(dead_code)] // TODO: unfinished
 mod env {
     use std::{error::Error, sync::{Arc, Weak}};
-    use deadflies_rust_infra::{primitives::IString, structs::{ArcRw, Map}};
-    use crate::types::{JType, Object};
+    use deadflies_rust_infra::{primitives::IString, structs::{ArcRw, List, Map}};
+    use parking_lot::RwLock;
+    use crate::{abstract_ops::disposable_ops::Disposable, types::{JType, Object}};
 
     #[derive(Debug, Clone)]
     pub struct IndirectBinding {
@@ -148,6 +149,65 @@ mod env {
 
         fn der_with_base_object(&self) -> Option<Object> {
             None
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct DeclEnvConcrete {
+        bindings: Weak<RwLock<Map<IString, BindingDesc>>>,
+        outer_env: Option<Weak<dyn Env>>,
+        disposable_stack: ArcRw<List<Disposable>>,
+    }
+
+    impl DeclEnv for DeclEnvConcrete {}
+
+    impl Env for DeclEnvConcrete {
+        fn has_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
+            self.der_has_binding(name)
+        }
+    
+        fn create_mutable_binding(&self, name: IString, deletable: bool) -> Result<(), Box<dyn Error>> {
+            self.der_create_mutable_binding(name, deletable)
+        }
+    
+        fn create_immutable_binding(&self, name: IString, strict: bool) -> Result<(), Box<dyn Error>> {
+            self.der_create_immutable_binding(name, strict)
+        }
+    
+        fn initialize_binding(&self, name: &IString, val: JType) -> Result<(), Box<dyn Error>> {
+            self.der_initialize_binding(name, val)
+        }
+    
+        fn set_mutable_binding(&self, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>> {
+            self.der_set_mutable_binding(name, val, strict)
+        }
+    
+        fn get_binding_value(&self, name: &IString, strict: bool) -> Result<JType, Box<dyn Error>> {
+            self.der_get_binding_value(name, strict)
+        }
+    
+        fn delete_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
+            self.der_delete_binding(name)
+        }
+    
+        fn has_this_binding(&self) -> bool {
+            self.der_has_this_binding()
+        }
+    
+        fn get_this_binding(&self) -> Result<JType, Box<dyn Error>> {
+            self.der_get_this_binding()
+        }
+    
+        fn has_super_binding(&self) -> bool {
+            self.der_has_super_binding()
+        }
+    
+        fn with_base_object(&self) -> Option<Object> {
+            self.der_with_base_object()
+        }
+    
+        fn get_bindings(&self) -> ArcRw<Map<IString, BindingDesc>> {
+            self.bindings.upgrade().unwrap()
         }
     }
 }

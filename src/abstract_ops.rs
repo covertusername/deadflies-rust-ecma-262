@@ -1630,7 +1630,7 @@ mod iterator_ops {
 }
 
 #[allow(dead_code)] // TODO: extremely unfinished
-mod disposable_ops {
+pub mod disposable_ops {
     use std::error::Error;
     use deadflies_rust_infra::structs::List;
     use crate::types::{JType, Key, Object};
@@ -1641,6 +1641,7 @@ mod disposable_ops {
         Async,
     }
 
+    #[derive(Debug)]
     pub struct Disposable {
         resource_value: Option<Object>,
         kind: DisposableKind,
