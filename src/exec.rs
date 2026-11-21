@@ -307,4 +307,89 @@ mod env {
             unimplemented!() // not applicable for this kind of Env
         }
     }
+
+    #[derive(Debug)]
+    pub enum FuncEnvThisState {
+        Lexical,
+        Initialized,
+        Uninitialized,
+    }
+
+    #[derive(Debug)]
+    pub struct FuncEnv {
+        bindings: Weak<RwLock<Map<IString, BindingDesc>>>,
+        outer_env: Option<Weak<dyn Env>>,
+        disposable_stack: ArcRw<List<Disposable>>,
+        this_value: ArcRw<JType>,
+        this_status: ArcRw<FuncEnvThisState>,
+        func: Object,
+        new_target: Option<Object>,
+    }
+
+    impl FuncEnv {
+        #[allow(unused_variables)] // TODO: unfinished
+        #[allow(clippy::needless_pass_by_value)] // TODO: unfinished
+        pub fn bind_this_value(&self, val: JType) -> Result<(), Box<dyn Error>> {
+            match *self.this_status.read() {
+                FuncEnvThisState::Lexical => panic!("FuncEnv::bind_this_value: cannot bind this values to lexical function environments"),
+                FuncEnvThisState::Initialized => {
+                    // TODO: Error Objects (Box<dyn Error> is a placeholder)
+                    todo!()
+                },
+                FuncEnvThisState::Uninitialized => todo!(),
+            }
+        }
+    }
+
+    impl DeclEnv for FuncEnv {}
+
+    impl Env for FuncEnv {
+        fn has_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
+            self.der_has_binding(name)
+        }
+    
+        fn create_mutable_binding(&self, name: IString, deletable: bool) -> Result<(), Box<dyn Error>> {
+            self.der_create_mutable_binding(name, deletable)
+        }
+    
+        fn create_immutable_binding(&self, name: IString, strict: bool) -> Result<(), Box<dyn Error>> {
+            self.der_create_immutable_binding(name, strict)
+        }
+    
+        fn initialize_binding(&self, name: &IString, val: JType) -> Result<(), Box<dyn Error>> {
+            self.der_initialize_binding(name, val)
+        }
+    
+        fn set_mutable_binding(&self, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>> {
+            self.der_set_mutable_binding(name, val, strict)
+        }
+    
+        fn get_binding_value(&self, name: &IString, strict: bool) -> Result<JType, Box<dyn Error>> {
+            self.der_get_binding_value(name, strict)
+        }
+    
+        fn delete_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
+            self.der_delete_binding(name)
+        }
+    
+        fn has_this_binding(&self) -> bool {
+            todo!()
+        }
+    
+        fn get_this_binding(&self) -> Result<JType, Box<dyn Error>> {
+            todo!()
+        }
+    
+        fn has_super_binding(&self) -> bool {
+            todo!()
+        }
+    
+        fn with_base_object(&self) -> Option<Object> {
+            self.der_with_base_object()
+        }
+    
+        fn get_bindings(&self) -> ArcRw<Map<IString, BindingDesc>> {
+            self.bindings.upgrade().unwrap()
+        }
+    }
 }
