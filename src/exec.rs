@@ -256,8 +256,15 @@ mod env {
             self.set_mutable_binding(name.clone(), val, false)
         }
     
+        #[allow(unused_variables)] // TODO: unfinished
+        #[allow(clippy::redundant_else)] // TODO: unfinished
         fn set_mutable_binding(&self, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>> {
-            todo!()
+            if !self.binding_object.has_property(&name.as_key())? && strict {
+                // TODO: Error Objects (Box<dyn Error> is a placeholder)
+                todo!()
+            } else {
+                todo!()
+            }
         }
     
         fn get_binding_value(&self, name: &IString, strict: bool) -> Result<JType, Box<dyn Error>> {
