@@ -92,7 +92,12 @@ mod env {
             Ok(())
         }
 
-        fn der_initialize_binding(&self, name: IString, val: JType) -> Result<(), Box<dyn Error>>;
+        fn der_initialize_binding(&self, name: &IString, val: JType) -> Result<(), Box<dyn Error>> {
+            assert!(matches!(self.get_bindings().read().get(name).unwrap().val, BindingType::None));
+
+            self.get_bindings().write().get_mut(name).unwrap().val = BindingType::Direct(val);
+            Ok(())
+        }
 
         fn der_set_mutable_binding(&self, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>>;
 
