@@ -339,6 +339,12 @@ mod env {
                 FuncEnvThisState::Uninitialized => todo!(),
             }
         }
+
+        // technically can only return Object, Null, or Undefined but i did not feel like making a separate enum just for this function
+        pub fn get_super_base(&self) -> JType {
+            // TODO: Full function object implementation. We currently don't track internal slots.
+            todo!()
+        }
     }
 
     impl DeclEnv for FuncEnv {}
@@ -388,6 +394,7 @@ mod env {
         }
     
         fn has_super_binding(&self) -> bool {
+            // TODO: Full function object implementation. We currently don't track internal slots.
             todo!()
         }
     
