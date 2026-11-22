@@ -406,4 +406,65 @@ mod env {
             self.bindings.upgrade().unwrap()
         }
     }
+
+    #[derive(Debug)]
+    pub struct GlobalEnv {
+        outer_env: Option<Weak<dyn Env>>,
+        object_record: ObjectEnv,
+        decl_record: DeclEnvConcrete,
+    }
+
+    impl Env for GlobalEnv {
+        fn has_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
+            if self.decl_record.has_binding(name).unwrap() {
+                Ok(true)
+            } else {
+                self.object_record.has_binding(name)
+            }
+        }
+    
+        fn create_mutable_binding(&self, name: IString, deletable: bool) -> Result<(), Box<dyn Error>> {
+            todo!()
+        }
+    
+        fn create_immutable_binding(&self, name: IString, strict: bool) -> Result<(), Box<dyn Error>> {
+            todo!()
+        }
+    
+        fn initialize_binding(&self, name: &IString, val: JType) -> Result<(), Box<dyn Error>> {
+            todo!()
+        }
+    
+        fn set_mutable_binding(&self, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>> {
+            todo!()
+        }
+    
+        fn get_binding_value(&self, name: &IString, strict: bool) -> Result<JType, Box<dyn Error>> {
+            todo!()
+        }
+    
+        fn delete_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
+            todo!()
+        }
+    
+        fn has_this_binding(&self) -> bool {
+            todo!()
+        }
+    
+        fn get_this_binding(&self) -> Result<JType, Box<dyn Error>> {
+            todo!()
+        }
+    
+        fn has_super_binding(&self) -> bool {
+            todo!()
+        }
+    
+        fn with_base_object(&self) -> Option<Object> {
+            todo!()
+        }
+    
+        fn get_bindings(&self) -> ArcRw<Map<IString, BindingDesc>> {
+            todo!()
+        }
+    }
 }
