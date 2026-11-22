@@ -3,11 +3,11 @@ mod env {
     use std::{error::Error, sync::{Arc, Weak}};
     use deadflies_rust_infra::{primitives::IString, structs::{ArcRw, List, Map}};
     use parking_lot::RwLock;
-    use crate::{abstract_ops::disposable_ops::Disposable, types::{JString, JType, Key, Object, PropDesc, PropDescData}};
+    use crate::{abstract_ops::disposable_ops::Disposable, types::{JString, JType, Key, Object, PropDesc, PropDescData, Todo}};
 
     #[derive(Debug, Clone)]
     pub struct IndirectBinding {
-        target_mod: !, // TODO: Module Records
+        target_mod: Todo, // TODO: Module Records
         bind_key: IString,
     }
 
@@ -570,6 +570,15 @@ mod env {
         bindings: Weak<RwLock<Map<IString, BindingDesc>>>,
         outer_env: Option<Weak<dyn Env>>,
         disposable_stack: ArcRw<List<Disposable>>,
+    }
+
+    impl ModuleEnv {
+        #[allow(unused_variables)] // TODO: unfinished
+        #[allow(clippy::needless_pass_by_value)] // TODO: unfinished
+        pub fn create_import_binding(&self, name: IString, target_module: Todo, target_name: IString) {
+            // TODO: Module Records
+            todo!()
+        }
     }
 
     impl DeclEnv for ModuleEnv {}

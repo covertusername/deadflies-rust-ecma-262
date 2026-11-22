@@ -22,7 +22,7 @@ pub mod types {
     const ASCII_WORD_CHARS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_";
     const _DEBUG: bool = true;
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub enum Todo {}
 
     pub trait JString {
