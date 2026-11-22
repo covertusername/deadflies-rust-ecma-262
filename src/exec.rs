@@ -466,7 +466,13 @@ mod env {
         }
     
         fn delete_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
-            todo!()
+            if self.decl_record.has_binding(name).unwrap() {
+                self.decl_record.delete_binding(name)
+            } else if self.object_record.binding_object.has_own_property(&name.as_key())? {
+                self.object_record.delete_binding(name)
+            } else {
+                Ok(true)
+            }
         }
     
         fn has_this_binding(&self) -> bool {
