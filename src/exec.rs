@@ -564,4 +564,74 @@ mod env {
             unimplemented!() // not applicable for this kind of Env
         }
     }
+
+    #[derive(Debug)]
+    pub struct ModuleEnv {
+        bindings: Weak<RwLock<Map<IString, BindingDesc>>>,
+        outer_env: Option<Weak<dyn Env>>,
+        disposable_stack: ArcRw<List<Disposable>>,
+    }
+
+    impl DeclEnv for ModuleEnv {}
+
+    impl Env for ModuleEnv {
+        fn has_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
+            self.der_has_binding(name)
+        }
+    
+        fn create_mutable_binding(&self, name: IString, deletable: bool) -> Result<(), Box<dyn Error>> {
+            self.der_create_mutable_binding(name, deletable)
+        }
+    
+        fn create_immutable_binding(&self, name: IString, strict: bool) -> Result<(), Box<dyn Error>> {
+            self.der_create_immutable_binding(name, strict)
+        }
+    
+        fn initialize_binding(&self, name: &IString, val: JType) -> Result<(), Box<dyn Error>> {
+            self.der_initialize_binding(name, val)
+        }
+    
+        fn set_mutable_binding(&self, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>> {
+            self.der_set_mutable_binding(name, val, strict)
+        }
+    
+        #[allow(unused_variables)] // TODO: unfinished
+        fn get_binding_value(&self, name: &IString, strict: bool) -> Result<JType, Box<dyn Error>> {
+            assert!(strict);
+            assert!(self.has_binding(name).unwrap());
+
+            match self.get_bindings().read().get(name).unwrap().val {
+                BindingType::Indirect(indirect_binding) => {
+                    // TODO: Module Records
+                    todo!()
+                },
+                BindingType::None => todo!(),
+                BindingType::Direct(jtype) => todo!(),
+            }
+        }
+    
+        fn delete_binding(&self, _name: &IString) -> Result<bool, Box<dyn Error>> {
+            unimplemented!() // explicitly unimplemented by specification
+        }
+    
+        fn has_this_binding(&self) -> bool {
+            true
+        }
+    
+        fn get_this_binding(&self) -> Result<JType, Box<dyn Error>> {
+            Ok(JType::Undefined)
+        }
+    
+        fn has_super_binding(&self) -> bool {
+            self.der_has_super_binding()
+        }
+    
+        fn with_base_object(&self) -> Option<Object> {
+            self.der_with_base_object()
+        }
+    
+        fn get_bindings(&self) -> ArcRw<Map<IString, BindingDesc>> {
+            self.bindings.upgrade().unwrap()
+        }
+    }
 }
