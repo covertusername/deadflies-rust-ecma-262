@@ -432,7 +432,12 @@ mod env {
             todo!()
         }
     
+        #[allow(unused_variables)] // TODO: unfinished
         fn create_immutable_binding(&self, name: IString, strict: bool) -> Result<(), Box<dyn Error>> {
+            if self.decl_record.has_binding(&name).unwrap() {
+                // TODO: Error Objects (Box<dyn Error> is a placeholder)
+                todo!()
+            }
             todo!()
         }
     
