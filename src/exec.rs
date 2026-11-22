@@ -427,6 +427,26 @@ mod env {
                 Ok(false)
             }
         }
+
+        pub fn can_declare_global_var(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
+            if self.object_record.binding_object.has_own_property(&name.as_key())? {
+                Ok(true)
+            } else {
+                self.object_record.binding_object.is_extensible()
+            }
+        }
+
+        pub fn can_declare_global_function(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
+            if let Some(existing_property) = self.object_record.binding_object.inner.get_own_property(&name.as_key())? {
+                if existing_property.configurable.unwrap() || (existing_property.is_data().is_some_and(|x| x.writable.unwrap()) && existing_property.enumerable.unwrap()) {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            } else {
+                self.object_record.binding_object.is_extensible()
+            }
+        }
     }
 
     impl Env for GlobalEnv {
