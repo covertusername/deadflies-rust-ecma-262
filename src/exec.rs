@@ -450,7 +450,11 @@ mod env {
         }
     
         fn set_mutable_binding(&self, name: IString, val: JType, strict: bool) -> Result<(), Box<dyn Error>> {
-            todo!()
+            if self.decl_record.has_binding(&name).unwrap() {
+                self.decl_record.set_mutable_binding(name, val, strict)
+            } else {
+                self.object_record.set_mutable_binding(name, val, strict)
+            }
         }
     
         fn get_binding_value(&self, name: &IString, strict: bool) -> Result<JType, Box<dyn Error>> {
