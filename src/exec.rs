@@ -415,6 +415,20 @@ mod env {
         decl_record: DeclEnvConcrete,
     }
 
+    impl GlobalEnv {
+        pub fn has_lexical_declaration(&self, name: &IString) -> bool {
+            self.decl_record.has_binding(name).unwrap()
+        }
+
+        pub fn has_restricted_global_property(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
+            if let Some(existing_property) = self.object_record.binding_object.inner.get_own_property(&name.as_key())? {
+                Ok(!existing_property.configurable.unwrap())
+            } else {
+                Ok(false)
+            }
+        }
+    }
+
     impl Env for GlobalEnv {
         fn has_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
             if self.decl_record.has_binding(name).unwrap() {
