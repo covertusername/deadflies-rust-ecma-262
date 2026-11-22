@@ -411,6 +411,7 @@ mod env {
     pub struct GlobalEnv {
         outer_env: Option<Weak<dyn Env>>,
         object_record: ObjectEnv,
+        global_this: Object,
         decl_record: DeclEnvConcrete,
     }
 
@@ -476,23 +477,23 @@ mod env {
         }
     
         fn has_this_binding(&self) -> bool {
-            todo!()
+            true
         }
     
         fn get_this_binding(&self) -> Result<JType, Box<dyn Error>> {
-            todo!()
+            Ok(JType::Object(self.global_this.clone_shallow()))
         }
     
         fn has_super_binding(&self) -> bool {
-            todo!()
+            false
         }
     
         fn with_base_object(&self) -> Option<Object> {
-            todo!()
+            None
         }
     
         fn get_bindings(&self) -> ArcRw<Map<IString, BindingDesc>> {
-            todo!()
+            unimplemented!() // not applicable for this kind of Env
         }
     }
 }
