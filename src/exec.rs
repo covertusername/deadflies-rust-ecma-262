@@ -455,6 +455,32 @@ mod env {
             }
             Ok(())
         }
+
+        pub fn create_global_function_binding(&self, name: &IString, val: &Object, deletable: bool) -> Result<(), Box<dyn Error>> {
+            let existing_property = self.object_record.binding_object.inner.get_own_property(&name.as_key())?;
+            let desc = if existing_property.is_none_or(|x| x.configurable.unwrap()) {
+                PropDesc {
+                    kind: crate::types::PropDescType::Data(PropDescData {
+                        val: Some(JType::Object(val.clone_shallow())),
+                        writable: Some(true),
+                    }),
+                    enumerable: Some(true),
+                    configurable: Some(deletable),
+                }
+            } else {
+                PropDesc {
+                    kind: crate::types::PropDescType::Data(PropDescData {
+                        val: Some(JType::Object(val.clone_shallow())),
+                        writable: None,
+                    }),
+                    enumerable: None,
+                    configurable: None,
+                }
+            };
+
+            self.object_record.binding_object.define_property_or_throw(name.as_key(), desc)?;
+            self.object_record.binding_object.set(name.as_key(), JType::Object(val.clone_shallow()), false)
+        }
     }
 
     impl Env for GlobalEnv {
