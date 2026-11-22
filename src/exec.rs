@@ -447,6 +447,14 @@ mod env {
                 self.object_record.binding_object.is_extensible()
             }
         }
+
+        pub fn create_global_var_binding(&self, name: &IString, deletable: bool) -> Result<(), Box<dyn Error>> {
+            if !self.object_record.binding_object.has_own_property(&name.as_key())? && self.object_record.binding_object.is_extensible()? {
+                self.object_record.create_mutable_binding(name.clone(), deletable)?;
+                self.object_record.initialize_binding(name, JType::Undefined)?;
+            }
+            Ok(())
+        }
     }
 
     impl Env for GlobalEnv {
