@@ -458,7 +458,11 @@ mod env {
         }
     
         fn get_binding_value(&self, name: &IString, strict: bool) -> Result<JType, Box<dyn Error>> {
-            todo!()
+            if self.decl_record.has_binding(name).unwrap() {
+                self.decl_record.get_binding_value(name, strict)
+            } else {
+                self.object_record.get_binding_value(name, strict)
+            }
         }
     
         fn delete_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>> {
