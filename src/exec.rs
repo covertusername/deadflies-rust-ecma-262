@@ -802,3 +802,35 @@ pub mod env {
         }
     }
 }
+
+#[allow(dead_code)] // TODO: unfinished, module not yet used elsewhere
+mod priv_env {
+    use std::sync::{Arc, Weak};
+    use deadflies_rust_infra::{primitives::IString, structs::{ArcRw, List}};
+    use parking_lot::RwLock;
+    use crate::types::PrivName;
+
+    pub struct PrivEnv {
+        outer: Option<Weak<PrivEnv>>,
+        names: ArcRw<List<Arc<PrivName>>>,
+    }
+
+    impl PrivEnv {
+        pub fn new(outer: Option<Weak<PrivEnv>>) -> Arc<PrivEnv> {
+            Arc::new(PrivEnv {
+                outer,
+                names: Arc::new(RwLock::new(List::new())),
+            })
+        }
+
+        pub fn resolve_ident(&self, ident: IString) -> Arc<PrivName> {
+            for name in self.names.read().iter() {
+                if name.read().description == ident {
+                    return name.read().clone();
+                }
+            }
+            // ASSERT: self.outer.is_some() - if we don't have an outer we're screwed anyway, hence the nasty double-unwrap
+            self.outer.as_ref().unwrap().upgrade().unwrap().resolve_ident(ident)
+        }
+    }
+}

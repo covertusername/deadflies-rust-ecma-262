@@ -1706,7 +1706,7 @@ pub mod types {
     pub struct PrivName {
         me: Weak<PrivName>,
         id: u64,
-        description: IString,
+        pub description: IString,
     }
 
     impl PrivName {
