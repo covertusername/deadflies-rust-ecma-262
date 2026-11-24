@@ -2,6 +2,7 @@
 pub mod env {
     use std::{error::Error, sync::{Arc, Weak}};
     use deadflies_rust_infra::{primitives::IString, structs::{ArcRw, List, Map}};
+    use parking_lot::RwLock;
     use crate::{abstract_ops::disposable_ops::Disposable, types::{JString, JType, Key, Object, PropDesc, PropDescData, Reference, Todo}};
 
     #[derive(Debug, Clone)]
@@ -30,14 +31,14 @@ pub mod env {
     }
 
     pub struct Environment {
-        outer_env: Option<Weak<dyn Env>>,
+        outer: Option<Weak<dyn Env>>,
         inner: Arc<dyn Env>,
     }
 
     impl Environment {
         pub fn clone_shallow(&self) -> Environment {
             Environment {
-                outer_env: self.outer_env.clone(),
+                outer: self.outer.clone(),
                 inner: self.inner.clone(),
             }
         }
@@ -57,7 +58,7 @@ pub mod env {
                     this_value: None,
                 })
             } else {
-                match self.outer_env {
+                match self.outer {
                     Some(ref env) => env.upgrade().unwrap().make_environment().get_identifier_reference(name, strict),
                     None => Ok(Reference {
                         base: crate::types::RefBase::Unresolvable,
@@ -95,13 +96,13 @@ pub mod env {
 
         // implementation-specific functions begin here
 
-        fn get_outer_env(&self) -> Option<Weak<dyn Env>>;
+        fn get_outer(&self) -> Option<Weak<dyn Env>>;
 
         fn get_self(&self) -> Arc<dyn Env>;
 
         fn make_environment(self: Arc<Self>) -> Environment {
             Environment {
-                outer_env: self.get_outer_env(),
+                outer: self.get_outer(),
                 inner: self.get_self(),
             }
         }
@@ -202,9 +203,24 @@ pub mod env {
     #[derive(Debug)]
     pub struct DeclEnvConcrete {
         bindings: ArcRw<Map<IString, BindingDesc>>,
-        outer_env: Option<Weak<dyn Env>>,
+        outer: Option<Weak<dyn Env>>,
         me: Weak<dyn Env>,
         disposable_stack: ArcRw<List<Disposable>>,
+    }
+
+    impl DeclEnvConcrete {
+        pub fn new(outer: Option<Weak<dyn Env>>) -> Arc<Self> {
+            Arc::new_cyclic(|me| DeclEnvConcrete {
+                bindings: Arc::new(RwLock::new(Map::new())),
+                outer,
+                me: me.clone(),
+                disposable_stack: Arc::new(RwLock::new(List::new())),
+            })
+        }
+
+        pub fn new_wrapped(outer: Option<Weak<dyn Env>>) -> Environment {
+            DeclEnvConcrete::new(outer).make_environment()
+        }
     }
 
     impl DeclEnv for DeclEnvConcrete {
@@ -258,8 +274,8 @@ pub mod env {
             self.der_with_base_object()
         }
 
-        fn get_outer_env(&self) -> Option<Weak<dyn Env>> {
-            self.outer_env.clone()
+        fn get_outer(&self) -> Option<Weak<dyn Env>> {
+            self.outer.clone()
         }
 
         fn get_self(&self) -> Arc<dyn Env> {
@@ -269,10 +285,25 @@ pub mod env {
 
     #[derive(Debug)]
     pub struct ObjectEnv {
-        outer_env: Option<Weak<dyn Env>>,
+        outer: Option<Weak<dyn Env>>,
         me: Weak<dyn Env>,
         binding_object: Object,
         is_with_env: bool,
+    }
+
+    impl ObjectEnv {
+        pub fn new(obj: Object, is_with_env: bool, outer: Option<Weak<dyn Env>>) -> Arc<Self> {
+            Arc::new_cyclic(|me| ObjectEnv {
+                outer,
+                me: me.clone(),
+                binding_object: obj,
+                is_with_env,
+            })
+        }
+
+        pub fn new_wrapped(obj: Object, is_with_env: bool, outer: Option<Weak<dyn Env>>) -> Environment {
+            ObjectEnv::new(obj, is_with_env, outer).make_environment()
+        }
     }
 
     impl Env for ObjectEnv {
@@ -359,8 +390,8 @@ pub mod env {
             }
         }
 
-        fn get_outer_env(&self) -> Option<Weak<dyn Env>> {
-            self.outer_env.clone()
+        fn get_outer(&self) -> Option<Weak<dyn Env>> {
+            self.outer.clone()
         }
 
         fn get_self(&self) -> Arc<dyn Env> {
@@ -378,7 +409,7 @@ pub mod env {
     #[derive(Debug)]
     pub struct FuncEnv {
         bindings: ArcRw<Map<IString, BindingDesc>>,
-        outer_env: Option<Weak<dyn Env>>,
+        outer: Option<Weak<dyn Env>>,
         me: Weak<dyn Env>,
         disposable_stack: ArcRw<List<Disposable>>,
         this_value: ArcRw<JType>,
@@ -388,6 +419,27 @@ pub mod env {
     }
 
     impl FuncEnv {
+        #[allow(unused_variables)] // TODO: unfinished
+        #[allow(unreachable_code)] // TODO: unfinished
+        #[allow(unused_assignments)] // TODO: unfinished
+        pub fn new(func: Object, new_target: Option<Object>) -> Arc<Self> {
+            // TODO: Full function object implementation. We currently don't track internal slots.
+            Arc::new_cyclic(|me| FuncEnv {
+                bindings: Arc::new(RwLock::new(Map::new())),
+                outer: todo!(),
+                me: todo!(),
+                disposable_stack: todo!(),
+                this_value: todo!(),
+                this_status: todo!(),
+                func,
+                new_target,
+            })
+        }
+
+        pub fn new_wrapped(func: Object, new_target: Option<Object>) -> Environment {
+            FuncEnv::new(func, new_target).make_environment()
+        }
+
         #[allow(unused_variables)] // TODO: unfinished
         #[allow(clippy::needless_pass_by_value)] // TODO: unfinished
         pub fn bind_this_value(&self, val: JType) -> Result<(), Box<dyn Error>> {
@@ -467,8 +519,8 @@ pub mod env {
             self.der_with_base_object()
         }
 
-        fn get_outer_env(&self) -> Option<Weak<dyn Env>> {
-            self.outer_env.clone()
+        fn get_outer(&self) -> Option<Weak<dyn Env>> {
+            self.outer.clone()
         }
 
         fn get_self(&self) -> Arc<dyn Env> {
@@ -478,14 +530,28 @@ pub mod env {
 
     #[derive(Debug)]
     pub struct GlobalEnv {
-        outer_env: Option<Weak<dyn Env>>,
+        outer: Option<Weak<dyn Env>>,
         me: Weak<dyn Env>,
-        object_record: ObjectEnv,
+        object_record: Arc<ObjectEnv>,
         global_this: Object,
-        decl_record: DeclEnvConcrete,
+        decl_record: Arc<DeclEnvConcrete>,
     }
 
     impl GlobalEnv {
+        pub fn new(obj: Object, this: Object) -> Arc<Self> {
+            Arc::new_cyclic(|me| GlobalEnv {
+                outer: None,
+                me: me.clone(),
+                object_record: ObjectEnv::new(obj, false, None),
+                global_this: this,
+                decl_record: DeclEnvConcrete::new(None),
+            })
+        }
+
+        pub fn new_wrapped(obj: Object, this: Object) -> Environment {
+            GlobalEnv::new(obj, this).make_environment()
+        }
+
         pub fn has_lexical_declaration(&self, name: &IString) -> bool {
             self.decl_record.has_binding(name).unwrap()
         }
@@ -630,8 +696,8 @@ pub mod env {
             None
         }
 
-        fn get_outer_env(&self) -> Option<Weak<dyn Env>> {
-            self.outer_env.clone()
+        fn get_outer(&self) -> Option<Weak<dyn Env>> {
+            self.outer.clone()
         }
 
         fn get_self(&self) -> Arc<dyn Env> {
@@ -643,11 +709,20 @@ pub mod env {
     pub struct ModuleEnv {
         bindings: ArcRw<Map<IString, BindingDesc>>,
         me: Weak<dyn Env>,
-        outer_env: Option<Weak<dyn Env>>,
+        outer: Option<Weak<dyn Env>>,
         disposable_stack: ArcRw<List<Disposable>>,
     }
 
     impl ModuleEnv {
+        pub fn new(outer: Weak<GlobalEnv>) -> Arc<Self> {
+            Arc::new_cyclic(|me| ModuleEnv {
+                bindings: Arc::new(RwLock::new(Map::new())),
+                me: me.clone(),
+                outer: Some(outer),
+                disposable_stack: Arc::new(RwLock::new(List::new())),
+            })
+        }
+
         #[allow(unused_variables)] // TODO: unfinished
         #[allow(clippy::needless_pass_by_value)] // TODO: unfinished
         pub fn create_import_binding(&self, name: IString, target_module: Todo, target_name: IString) {
@@ -718,8 +793,8 @@ pub mod env {
             self.der_with_base_object()
         }
 
-        fn get_outer_env(&self) -> Option<Weak<dyn Env>> {
-            self.outer_env.clone()
+        fn get_outer(&self) -> Option<Weak<dyn Env>> {
+            self.outer.clone()
         }
 
         fn get_self(&self) -> Arc<dyn Env> {
