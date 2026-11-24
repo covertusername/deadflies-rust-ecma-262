@@ -11,7 +11,7 @@ pub mod types {
     use parking_lot::{Mutex, RwLock};
     use num_bigint::BigInt;
     use astro_float::{BigFloat, Consts, RoundingMode};
-    use crate::util::{bf_to_i64_unchecked, bf_to_usize_unchecked, sane_round};
+    use crate::{exec::env::Environment, util::{bf_to_i64_unchecked, bf_to_usize_unchecked, sane_round}};
 
     static KNOWN_SYMBOLS: Mutex<Map<SymNames, Arc<Symbol>>> = Mutex::new(Map::new());
     #[allow(dead_code)] // TODO: for future use, not filled in anywhere yet, still need to implement what goes here
@@ -1173,6 +1173,8 @@ pub mod types {
         fn get_private_elements(&self) -> Weak<RwLock<List<PrivateElement>>>;
 
         fn get_kind(&self) -> ObjKind;
+
+        fn get_me(&self) -> Arc<dyn Obj>;
     }
 
     /*
@@ -1186,6 +1188,7 @@ pub mod types {
         clone_id: u64,
         map: Weak<RwLock<Map<Key, PropDesc>>>,
         private_elements: Weak<RwLock<List<PrivateElement>>>,
+        me: Weak<dyn Obj>,
     }
 
     impl Obj for Func {
@@ -1228,6 +1231,10 @@ pub mod types {
         fn get_kind(&self) -> ObjKind {
             ObjKind::Func
         }
+
+        fn get_me(&self) -> Arc<dyn Obj> {
+            self.me.upgrade().unwrap()
+        }
     }
 
     #[derive(Debug)]
@@ -1238,23 +1245,26 @@ pub mod types {
         clone_id: u64,
         map: Weak<RwLock<Map<Key, PropDesc>>>,
         private_elements: Weak<RwLock<List<PrivateElement>>>,
+        me: Weak<dyn Obj>,
     }
 
     impl ConsFunc {
         #[must_use]
         #[allow(clippy::new_ret_no_self)] // intentional: generally, structs that implement Obj will always be wrapped in Object structs and never interacted with directly
         pub fn new() -> Object {
-            Object::new(|id, map, private_elements| Arc::new(ConsFunc {
+            Object::new(|id, map, private_elements| Arc::new_cyclic(|me| ConsFunc {
                 inner: Func {
                     id,
                     clone_id: 0,
                     map: map.clone(),
                     private_elements: private_elements.clone(),
+                    me: me.clone(),
                 },
                 id,
                 clone_id: 0,
                 map,
                 private_elements,
+                me: me.clone(),
             }))
         }
     }
@@ -1298,6 +1308,10 @@ pub mod types {
 
         fn get_kind(&self) -> ObjKind {
             ObjKind::ConsFunc
+        }
+
+        fn get_me(&self) -> Arc<dyn Obj> {
+            self.me.upgrade().unwrap()
         }
     }
 
@@ -1524,23 +1538,20 @@ pub mod types {
 
     pub enum RefBase {
         Value(JType),
-        // TODO: Environment Records
-        EnvRec(Todo),
+        EnvRec(Environment),
         Unresolvable,
     }
 
     pub enum RefRefName {
         Value(JType),
-        // TODO: Private Names
-        Name(Todo),
+        Name(Arc<PrivName>),
     }
 
-    #[allow(dead_code)] // TODO: unfinished
     pub struct Reference {
-        base: RefBase,
-        referenced_name: RefRefName,
-        strict: bool,
-        this_value: Option<JType>,
+        pub base: RefBase,
+        pub referenced_name: RefRefName,
+        pub strict: bool,
+        pub this_value: Option<JType>,
     }
 
     impl Reference {

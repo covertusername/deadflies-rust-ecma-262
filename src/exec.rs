@@ -1,9 +1,9 @@
 #[allow(dead_code)] // TODO: unfinished
-mod env {
+pub mod env {
     use std::{error::Error, sync::{Arc, Weak}};
     use deadflies_rust_infra::{primitives::IString, structs::{ArcRw, List, Map}};
     use parking_lot::RwLock;
-    use crate::{abstract_ops::disposable_ops::Disposable, types::{JString, JType, Key, Object, PropDesc, PropDescData, Todo}};
+    use crate::{abstract_ops::disposable_ops::Disposable, types::{JString, JType, Key, Object, PropDesc, PropDescData, Reference, Todo}};
 
     #[derive(Debug, Clone)]
     pub struct IndirectBinding {
@@ -36,6 +36,43 @@ mod env {
         inner: Arc<dyn Env>,
     }
 
+    impl Environment {
+        pub fn clone_shallow(&self) -> Environment {
+            Environment {
+                bindings: self.bindings.clone(),
+                outer_env: self.outer_env.clone(),
+                inner: self.inner.clone(),
+            }
+        }
+
+        /*
+         * technically need to have a verion where self is JType::Null but this
+         * only happens when this function is calling itself recursively on the
+         * parent environment (which might not exist). can simulate without
+         * recursion
+         */
+        pub fn get_identifier_reference(&self, name: &IString, strict: bool) -> Result<Reference, Box<dyn Error>> {
+            if self.inner.has_binding(name)? {
+                Ok(Reference {
+                    base: crate::types::RefBase::EnvRec(self.clone_shallow()),
+                    referenced_name: crate::types::RefRefName::Value(JType::JString(name.clone())),
+                    strict,
+                    this_value: None,
+                })
+            } else {
+                match self.outer_env {
+                    Some(ref env) => env.upgrade().unwrap().make_environment().get_identifier_reference(name, strict),
+                    None => Ok(Reference {
+                        base: crate::types::RefBase::Unresolvable,
+                        referenced_name: crate::types::RefRefName::Value(JType::JString(name.clone())),
+                        strict,
+                        this_value: None,
+                    }),
+                }
+            }
+        }
+    }
+
     pub trait Env: Send + Sync + std::fmt::Debug {
         fn has_binding(&self, name: &IString) -> Result<bool, Box<dyn Error>>;
 
@@ -62,6 +99,18 @@ mod env {
         // implementation-specific functions begin here
 
         fn get_bindings(&self) -> ArcRw<Map<IString, BindingDesc>>;
+
+        fn get_outer_env(&self) -> Option<Weak<dyn Env>>;
+
+        fn get_self(&self) -> Arc<dyn Env>;
+
+        fn make_environment(self: Arc<Self>) -> Environment {
+            Environment {
+                bindings: self.get_bindings(),
+                outer_env: self.get_outer_env(),
+                inner: self.get_self(),
+            }
+        }
     }
 
     pub trait DeclEnv: Env {
@@ -156,6 +205,7 @@ mod env {
     pub struct DeclEnvConcrete {
         bindings: Weak<RwLock<Map<IString, BindingDesc>>>,
         outer_env: Option<Weak<dyn Env>>,
+        me: Weak<dyn Env>,
         disposable_stack: ArcRw<List<Disposable>>,
     }
 
@@ -209,12 +259,21 @@ mod env {
         fn get_bindings(&self) -> ArcRw<Map<IString, BindingDesc>> {
             self.bindings.upgrade().unwrap()
         }
+
+        fn get_outer_env(&self) -> Option<Weak<dyn Env>> {
+            self.outer_env.clone()
+        }
+
+        fn get_self(&self) -> Arc<dyn Env> {
+            self.me.upgrade().unwrap()
+        }
     }
 
     #[derive(Debug)]
     pub struct ObjectEnv {
         // NOTE: this doesn't track its own bindings, its bindings are the named properties of the binding object
         outer_env: Option<Weak<dyn Env>>,
+        me: Weak<dyn Env>,
         binding_object: Object,
         is_with_env: bool,
     }
@@ -306,6 +365,14 @@ mod env {
         fn get_bindings(&self) -> ArcRw<Map<IString, BindingDesc>> {
             unimplemented!() // not applicable for this kind of Env
         }
+
+        fn get_outer_env(&self) -> Option<Weak<dyn Env>> {
+            self.outer_env.clone()
+        }
+
+        fn get_self(&self) -> Arc<dyn Env> {
+            self.me.upgrade().unwrap()
+        }
     }
 
     #[derive(Debug)]
@@ -319,6 +386,7 @@ mod env {
     pub struct FuncEnv {
         bindings: Weak<RwLock<Map<IString, BindingDesc>>>,
         outer_env: Option<Weak<dyn Env>>,
+        me: Weak<dyn Env>,
         disposable_stack: ArcRw<List<Disposable>>,
         this_value: ArcRw<JType>,
         this_status: ArcRw<FuncEnvThisState>,
@@ -405,11 +473,20 @@ mod env {
         fn get_bindings(&self) -> ArcRw<Map<IString, BindingDesc>> {
             self.bindings.upgrade().unwrap()
         }
+
+        fn get_outer_env(&self) -> Option<Weak<dyn Env>> {
+            self.outer_env.clone()
+        }
+
+        fn get_self(&self) -> Arc<dyn Env> {
+            self.me.upgrade().unwrap()
+        }
     }
 
     #[derive(Debug)]
     pub struct GlobalEnv {
         outer_env: Option<Weak<dyn Env>>,
+        me: Weak<dyn Env>,
         object_record: ObjectEnv,
         global_this: Object,
         decl_record: DeclEnvConcrete,
@@ -563,11 +640,20 @@ mod env {
         fn get_bindings(&self) -> ArcRw<Map<IString, BindingDesc>> {
             unimplemented!() // not applicable for this kind of Env
         }
+
+        fn get_outer_env(&self) -> Option<Weak<dyn Env>> {
+            self.outer_env.clone()
+        }
+
+        fn get_self(&self) -> Arc<dyn Env> {
+            self.me.upgrade().unwrap()
+        }
     }
 
     #[derive(Debug)]
     pub struct ModuleEnv {
         bindings: Weak<RwLock<Map<IString, BindingDesc>>>,
+        me: Weak<dyn Env>,
         outer_env: Option<Weak<dyn Env>>,
         disposable_stack: ArcRw<List<Disposable>>,
     }
@@ -641,6 +727,14 @@ mod env {
     
         fn get_bindings(&self) -> ArcRw<Map<IString, BindingDesc>> {
             self.bindings.upgrade().unwrap()
+        }
+
+        fn get_outer_env(&self) -> Option<Weak<dyn Env>> {
+            self.outer_env.clone()
+        }
+
+        fn get_self(&self) -> Arc<dyn Env> {
+            self.me.upgrade().unwrap()
         }
     }
 }
