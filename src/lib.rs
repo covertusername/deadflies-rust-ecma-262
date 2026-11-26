@@ -14,8 +14,6 @@ pub mod types {
     use crate::{exec::env::Environment, util::{bf_to_i64_unchecked, bf_to_usize_unchecked, sane_round}};
 
     static KNOWN_SYMBOLS: Mutex<Map<SymNames, Arc<Symbol>>> = Mutex::new(Map::new());
-    #[allow(dead_code)] // TODO: for future use, not filled in anywhere yet, still need to implement what goes here
-    static KNOWN_OBJECTS: Mutex<Map<&str, Object>> = Mutex::new(Map::new());
 
     // in standard but not used yet
     #[allow(dead_code)]
@@ -1085,6 +1083,7 @@ pub mod types {
         Func,
         ConsFunc,
         BoundFunc,
+        Blank,
     }
 
     #[allow(unused_variables)] // TODO: unfinished
@@ -1142,7 +1141,7 @@ pub mod types {
             todo!()
         }
 
-        fn clone(&self) -> Arc<dyn Obj>;
+        fn dup(self: Arc<Self>) -> Object; // would be called clone but conflicts with Arc::clone
 
         fn is_ordinary(&self) -> bool;
 
@@ -1150,7 +1149,7 @@ pub mod types {
 
         fn is_constructor(self: Arc<Self>) -> Option<Arc<ConsFunc>>;
 
-        fn has_reg_exp_matcher(&self) -> bool;
+        fn has_reg_exp_matcher(&self) -> bool; // TODO: FIXME: serves the same purpose as get_kind and should probably go away
 
         fn make_object(self: Arc<Self>) -> Object
         where 
@@ -1192,7 +1191,7 @@ pub mod types {
     }
 
     impl Obj for Func {
-        fn clone(&self) -> Arc<dyn Obj> {
+        fn dup(self: Arc<Self>) -> Object {
             todo!()
         }
 
@@ -1270,7 +1269,7 @@ pub mod types {
     }
 
     impl Obj for ConsFunc {
-        fn clone(&self) -> Arc<dyn Obj> {
+        fn dup(self: Arc<Self>) -> Object {
             todo!()
         }
 
@@ -1310,6 +1309,83 @@ pub mod types {
             ObjKind::ConsFunc
         }
 
+        fn get_me(&self) -> Arc<dyn Obj> {
+            self.me.upgrade().unwrap()
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct Blank {
+        id: u64,
+        clone_id: u64,
+        map: Weak<RwLock<Map<Key, PropDesc>>>,
+        private_elements: Weak<RwLock<List<PrivateElement>>>,
+        me: Weak<dyn Obj>,
+    }
+
+    impl Blank {
+        #[allow(clippy::new_ret_no_self)] // intentional, Obj structs should always be wrapped in Objects when passed around
+        #[must_use]
+        pub fn new() -> Object {
+            Object::new(|id, map, private_elements| Arc::new_cyclic(|me| Blank {
+                id,
+                clone_id: 0,
+                map,
+                private_elements,
+                me: me.clone()
+            }))
+        }
+    }
+
+    impl Obj for Blank {
+        fn dup(self: Arc<Self>) -> Object {
+            static CLONE_COUNTER: AtomicU64 = AtomicU64::new(0);
+
+            self.clone().make_object().clone_deep(|map, private_elements| Arc::new_cyclic(|me| Blank {
+                id: self.id,
+                clone_id: CLONE_COUNTER.fetch_add(1, Ordering::Relaxed),
+                map,
+                private_elements,
+                me: me.clone(),
+            }))
+        }
+    
+        fn is_ordinary(&self) -> bool {
+            true
+        }
+    
+        fn is_callable(&self) -> bool {
+           false
+        }
+    
+        fn is_constructor(self: Arc<Self>) -> Option<Arc<ConsFunc>> {
+            None
+        }
+    
+        fn has_reg_exp_matcher(&self) -> bool {
+            false
+        }
+    
+        fn get_id(&self) -> u64 {
+            self.id
+        }
+    
+        fn get_clone_id(&self) -> u64 {
+            self.clone_id
+        }
+    
+        fn get_map(&self) -> Weak<RwLock<Map<Key, PropDesc>>> {
+            self.map.clone()
+        }
+    
+        fn get_private_elements(&self) -> Weak<RwLock<List<PrivateElement>>> {
+            self.private_elements.clone()
+        }
+    
+        fn get_kind(&self) -> ObjKind {
+            ObjKind::Blank
+        }
+    
         fn get_me(&self) -> Arc<dyn Obj> {
             self.me.upgrade().unwrap()
         }
@@ -1396,17 +1472,28 @@ pub mod types {
                 inner: data_fn(id, Arc::downgrade(&map), Arc::downgrade(&private_elements)),
             }
         }
+
+        #[must_use]
+        pub fn clone_deep<F>(&self, data_fn: F) -> Object
+        where
+            F: FnOnce(Weak<RwLock<Map<Key, PropDesc>>>, Weak<RwLock<List<PrivateElement>>>) -> Arc<dyn Obj>
+        {
+            let map = Arc::new(RwLock::new(self.map.read().clone()));
+            let private_elements = Arc::new(RwLock::new(self.private_elements.read().clone()));
+
+            Object {
+                id: self.id,
+                map: map.clone(),
+                private_elements: private_elements.clone(),
+                inner: data_fn(Arc::downgrade(&map), Arc::downgrade(&private_elements)),
+            }
+        }
     }
 
     // deep clone
     impl Clone for Object {
         fn clone(&self) -> Self {
-            Self {
-                id: self.id,
-                map: Arc::new(RwLock::new(self.map.read().clone())),
-                private_elements: Arc::new(RwLock::new(self.private_elements.read().clone())),
-                inner: (*self.inner).clone()
-            }
+            self.inner.clone().dup()
         }
     }
 
