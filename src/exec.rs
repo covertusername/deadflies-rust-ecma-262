@@ -1128,7 +1128,9 @@ mod realm {
 
 #[allow(dead_code)] // TODO: unfinished
 pub mod ctx {
-    use crate::{CTX_STACK, exec::{env::Environment, priv_env::PrivEnv, realm::Realm}, types::{Object, Todo}};
+    use std::error::Error;
+    use deadflies_rust_infra::primitives::IString;
+    use crate::{CTX_STACK, exec::{env::Environment, priv_env::PrivEnv, realm::Realm}, types::{Object, Reference, Todo}};
 
     #[derive(Debug, Clone)]
     pub enum OrigCode {
@@ -1169,5 +1171,17 @@ pub mod ctx {
             }
         }
         found
+    }
+
+    #[allow(unused_variables)] // TODO: unfinished
+    pub fn resolve_binding(name: &IString, env: Option<Environment>) -> Result<Reference, Box<dyn Error>> {
+        let env = env.unwrap_or({
+            let ctx_stack = CTX_STACK.lock();
+            
+            ctx_stack[ctx_stack.len() - 1].ecma.as_ref().unwrap().lex.clone_shallow()
+        });
+
+        // TODO: IsStrict
+        todo!()
     }
 }
