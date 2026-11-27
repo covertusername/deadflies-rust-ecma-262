@@ -1130,7 +1130,7 @@ mod realm {
 pub mod ctx {
     use std::error::Error;
     use deadflies_rust_infra::primitives::IString;
-    use crate::{CTX_STACK, exec::{env::Environment, priv_env::PrivEnv, realm::Realm}, types::{Object, Reference, Todo}};
+    use crate::{CTX_STACK, exec::{env::Environment, priv_env::PrivEnv, realm::Realm}, types::{JType, Object, Reference, Todo}};
 
     #[derive(Debug, Clone)]
     pub enum OrigCode {
@@ -1196,5 +1196,9 @@ pub mod ctx {
             }
             env = env.outer.unwrap().upgrade().unwrap().make_environment(); // ASSERT: outer is not None
         }
+    }
+
+    pub fn resolve_this_binding() -> Result<JType, Box<dyn Error>> {
+        get_this_environment().inner.get_this_binding()
     }
 }
