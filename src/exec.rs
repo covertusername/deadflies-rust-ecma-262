@@ -31,8 +31,8 @@ pub mod env {
     }
 
     pub struct Environment {
-        outer: Option<Weak<dyn Env>>,
-        inner: Arc<dyn Env>,
+        pub outer: Option<Weak<dyn Env>>,
+        pub inner: Arc<dyn Env>,
     }
 
     impl Environment {
@@ -1155,6 +1155,12 @@ pub mod ctx {
         jgen: Option<Todo>, // TODO: Generators
     }
 
+    pub fn get_active_lex_env() -> Environment {
+        let ctx_stack = CTX_STACK.lock();
+            
+        ctx_stack[ctx_stack.len() - 1].ecma.as_ref().unwrap().lex.clone_shallow()
+    }
+
     pub fn get_active_script_or_module() -> OrigCode {
         let ctx_stack = CTX_STACK.lock();
 
@@ -1175,13 +1181,20 @@ pub mod ctx {
 
     #[allow(unused_variables)] // TODO: unfinished
     pub fn resolve_binding(name: &IString, env: Option<Environment>) -> Result<Reference, Box<dyn Error>> {
-        let env = env.unwrap_or({
-            let ctx_stack = CTX_STACK.lock();
-            
-            ctx_stack[ctx_stack.len() - 1].ecma.as_ref().unwrap().lex.clone_shallow()
-        });
+        let env = env.unwrap_or(get_active_lex_env());
 
         // TODO: IsStrict
         todo!()
+    }
+
+    pub fn get_this_environment() -> Environment {
+        let mut env = get_active_lex_env();
+
+        loop {
+            if env.inner.has_this_binding() {
+                return env;
+            }
+            env = env.outer.unwrap().upgrade().unwrap().make_environment(); // ASSERT: outer is not None
+        }
     }
 }
