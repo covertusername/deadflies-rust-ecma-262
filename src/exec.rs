@@ -100,6 +100,8 @@ pub mod env {
 
         fn get_self(&self) -> Arc<dyn Env>;
 
+        fn is_func_env(self: Arc<Self>) -> Option<Arc<FuncEnv>>;
+
         fn make_environment(self: Arc<Self>) -> Environment {
             Environment {
                 outer: self.get_outer(),
@@ -281,6 +283,10 @@ pub mod env {
         fn get_self(&self) -> Arc<dyn Env> {
             self.me.upgrade().unwrap()
         }
+
+        fn is_func_env(self: Arc<Self>) -> Option<Arc<FuncEnv>> {
+            None
+        }
     }
 
     #[derive(Debug)]
@@ -397,6 +403,10 @@ pub mod env {
         fn get_self(&self) -> Arc<dyn Env> {
             self.me.upgrade().unwrap()
         }
+
+        fn is_func_env(self: Arc<Self>) -> Option<Arc<FuncEnv>> {
+            None
+        }
     }
 
     #[derive(Debug)]
@@ -415,7 +425,7 @@ pub mod env {
         this_value: ArcRw<JType>,
         this_status: ArcRw<FuncEnvThisState>,
         func: Object,
-        new_target: Option<Object>,
+        pub new_target: Option<Object>,
     }
 
     impl FuncEnv {
@@ -525,6 +535,10 @@ pub mod env {
 
         fn get_self(&self) -> Arc<dyn Env> {
             self.me.upgrade().unwrap()
+        }
+
+        fn is_func_env(self: Arc<Self>) -> Option<Arc<FuncEnv>> {
+            Some(self.clone())
         }
     }
 
@@ -703,6 +717,10 @@ pub mod env {
         fn get_self(&self) -> Arc<dyn Env> {
             self.me.upgrade().unwrap()
         }
+
+        fn is_func_env(self: Arc<Self>) -> Option<Arc<FuncEnv>> {
+            None
+        }
     }
 
     #[derive(Debug)]
@@ -799,6 +817,10 @@ pub mod env {
 
         fn get_self(&self) -> Arc<dyn Env> {
             self.me.upgrade().unwrap()
+        }
+
+        fn is_func_env(self: Arc<Self>) -> Option<Arc<FuncEnv>> {
+            None
         }
     }
 }
@@ -1200,5 +1222,9 @@ pub mod ctx {
 
     pub fn resolve_this_binding() -> Result<JType, Box<dyn Error>> {
         get_this_environment().inner.get_this_binding()
+    }
+
+    pub fn get_new_target() -> Option<Object> {
+        get_this_environment().inner.is_func_env().unwrap().new_target.as_ref().map(crate::types::Object::clone_shallow) // ASSERT: the this environment is a function environment
     }
 }
