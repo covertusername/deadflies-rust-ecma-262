@@ -1,9 +1,16 @@
 #![warn(clippy::pedantic)]
 
+use parking_lot::Mutex;
+use crate::exec::ctx::Ctx;
+
 mod util;
 mod abstract_ops;
 mod syntax_directed_ops;
 mod exec;
+
+// TODO: FIXME: will probably be replaced with an Agent struct containing this later. also, could use an infra stack but it's a bit too strange for this
+#[allow(dead_code)] // TODO: unfinished
+static CTX_STACK: Mutex<Vec<Ctx>> = Mutex::new(Vec::new());
 
 pub mod types {
     use deadflies_rust_infra::{primitives::IString, structs::{ArcRw, List, Map}};

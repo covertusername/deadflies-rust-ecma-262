@@ -1125,3 +1125,49 @@ mod realm {
         };
     }
 }
+
+#[allow(dead_code)] // TODO: unfinished
+pub mod ctx {
+    use crate::{CTX_STACK, exec::{env::Environment, priv_env::PrivEnv, realm::Realm}, types::{Object, Todo}};
+
+    #[derive(Debug, Clone)]
+    pub enum OrigCode {
+        Module(Todo), // TODO: Module Records
+        Script(Todo), // TODO: Script Records
+        None,
+    }
+
+    pub struct ECMAEnvCtx {
+        lex: Environment,
+        var: Environment,
+        private: Option<PrivEnv>,
+    }
+
+    pub struct Ctx {
+        // unspecified state goes here. will be added to as the implementation continues
+        func: Object,
+        // unsure if this needs to be inside an Arc yet or not
+        realm: Realm,
+        script_or_module: OrigCode,
+        ecma: Option<ECMAEnvCtx>,
+        jgen: Option<Todo>, // TODO: Generators
+    }
+
+    pub fn get_active_script_or_module() -> OrigCode {
+        let ctx_stack = CTX_STACK.lock();
+
+        if ctx_stack.is_empty() {
+            return OrigCode::None;
+        }
+
+        let mut found = OrigCode::None;
+
+        for ctx in ctx_stack.iter().rev() {
+            if !matches!(ctx.script_or_module, OrigCode::None) {
+                found = ctx.script_or_module.clone();
+                break;
+            }
+        }
+        found
+    }
+}
