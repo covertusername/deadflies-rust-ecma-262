@@ -950,7 +950,7 @@ mod realm {
     pub struct Realm {
         agent: Todo, // TODO: Agents/Agent Records
         pub intrinsics: Option<Intrinsics>, // exceedingly gross, but needs to be None during initialization and then never again
-        global_obj: Object,
+        pub global_obj: Object,
         global_env: Arc<GlobalEnv>,
         template_map: ArcRw<List<Template>>,
         loaded_modules: ArcRw<List<Todo>>, // TODO: LoadedModuleRequest records
@@ -1150,7 +1150,7 @@ mod realm {
 
 #[allow(dead_code)] // TODO: unfinished
 pub mod ctx {
-    use std::error::Error;
+    use std::{error::Error, sync::Arc};
     use deadflies_rust_infra::primitives::IString;
     use crate::{CTX_STACK, exec::{env::Environment, priv_env::PrivEnv, realm::Realm}, types::{JType, Object, Reference, Todo}};
 
@@ -1171,7 +1171,7 @@ pub mod ctx {
         // unspecified state goes here. will be added to as the implementation continues
         func: Object,
         // unsure if this needs to be inside an Arc yet or not
-        realm: Realm,
+        realm: Arc<Realm>,
         script_or_module: OrigCode,
         ecma: Option<ECMAEnvCtx>,
         jgen: Option<Todo>, // TODO: Generators
@@ -1181,6 +1181,12 @@ pub mod ctx {
         let ctx_stack = CTX_STACK.lock();
             
         ctx_stack[ctx_stack.len() - 1].ecma.as_ref().unwrap().lex.clone_shallow()
+    }
+
+    pub fn get_active_realm() -> Arc<Realm> {
+        let ctx_stack = CTX_STACK.lock();
+
+        ctx_stack[ctx_stack.len() - 1].realm.clone()
     }
 
     pub fn get_active_script_or_module() -> OrigCode {
@@ -1226,5 +1232,9 @@ pub mod ctx {
 
     pub fn get_new_target() -> Option<Object> {
         get_this_environment().inner.is_func_env().unwrap().new_target.as_ref().map(crate::types::Object::clone_shallow) // ASSERT: the this environment is a function environment
+    }
+
+    pub fn get_global_object() -> Object {
+        get_active_realm().global_obj.clone_shallow()
     }
 }
